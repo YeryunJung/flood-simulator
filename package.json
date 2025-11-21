@@ -1,13 +1,14 @@
 {
-  "name": "react-flooding-damage",
-  "version": "1.0.0",
+  "name": "flood-simulator",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "date-fns": "^4.1.0",
