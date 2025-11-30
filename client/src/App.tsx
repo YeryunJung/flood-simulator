@@ -1,51 +1,38 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import type { FloodData } from './flood'
-import env from './config/env'
+import { MonthlySummary } from './components/StatisticsPanel/MonthlySummary'
+import { DistrictList } from './components/StatisticsPanel/DistrictList'
 
 function App() {
   const [floodData, setFloodData] = useState<FloodData | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
-    const fetchFloodData = async () => {
-      setLoading(true)
-      setError(null)
-
+    const fetchData = async () => {
       try {
-        const response = await fetch(
-          `${env.API_END_POINT}/monthly-flood-data/flood_data_2024_06.json`
-        )
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`)
-        }
-        const data = await response.json()
+        const res = await fetch('/flood_data_2023_07.json')
+        const data = await res.json()
         setFloodData(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch')
+      } catch (e) {
+        setError(e as Error)
       } finally {
         setLoading(false)
       }
     }
-
-    fetchFloodData()
+    fetchData()
   }, [])
 
+  if (loading) return <div>로딩 중...</div>
+  if (error) return <div>에러 발생: {error.message}</div>
+  if (!floodData) return null
+
   return (
-    <>
-      <h1>Flood Simulator</h1>
-      <div className='card'>
-        {loading && <p>Loading...</p>}
-        {error && <p style={{ color: 'red' }}>Error: {error}</p>}
-        {floodData && (
-          <div>
-            <p>데이터: {floodData.metadata.title}</p>
-            <p>폴리곤 수: {floodData.metadata.total_polygons}</p>
-          </div>
-        )}
-      </div>
-    </>
+    <div>
+      <MonthlySummary floodData={floodData} />
+      <DistrictList floodData={floodData} />
+    </div>
   )
 }
 
