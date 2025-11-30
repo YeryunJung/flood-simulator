@@ -12,20 +12,6 @@ const RISK_CONFIG = {
   [RISK_LEVEL.SEVERE]: { label: '심각', color: 'red', order: 2 }
 } as const
 
-/**
- * 침수 밀도(개/km²) 기준 위험도 계산
- * @param count 침수 지점 수
- * @param totalAreaM2 총 침수 면적 (m²)
- */
-// function calculateRiskLevel(count: number, totalAreaM2: number): RiskLevel {
-//   const areaKm2 = totalAreaM2 / 1_000_000
-//   const density = areaKm2 > 0 ? count / areaKm2 : 0
-
-//   if (density < 500) return RISK_LEVEL.LOW
-//   if (density < 1000) return RISK_LEVEL.MODERATE
-//   return RISK_LEVEL.SEVERE
-// }
-
 function depthToScore(depthM: number): number {
   if (depthM < 0.3) return 1 // 경미
   if (depthM < 1.0) return 2 // 주의
@@ -138,15 +124,20 @@ function DistrictCard({ district }: { district: DistrictStatistics }) {
 
 export function DistrictList({ floodData }: DistrictListProps) {
   const districts = calculateDistrictStatistics(floodData)
+  console.log(districts)
 
   return (
     <section className='district-list'>
       <h2 className='district-list__title'>자치구별 현황</h2>
-      <ul className='district-list__items'>
-        {districts.map((district) => (
-          <DistrictCard key={district.name} district={district} />
-        ))}
-      </ul>
+      {districts.length ? (
+        <ul className='district-list__items'>
+          {districts.map((district) => (
+            <DistrictCard key={district.name} district={district} />
+          ))}
+        </ul>
+      ) : (
+        <span className='empty-list'>표시할 데이터가 없어요</span>
+      )}
     </section>
   )
 }
