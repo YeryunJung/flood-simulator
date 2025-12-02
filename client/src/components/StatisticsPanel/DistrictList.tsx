@@ -1,9 +1,14 @@
-import type { FloodData } from '../../flood'
+import { useFloodData, type DistrictGroup } from '../../hooks/useFloodData'
 import type { DistrictStatistics, RiskLevel } from '../../types/statistics'
 import { RISK_LEVEL } from '../../types/statistics'
 
+interface Period {
+  year: number
+  month: number
+}
+
 interface DistrictListProps {
-  floodData: FloodData
+  period: Period
 }
 
 const RISK_CONFIG = {
@@ -51,50 +56,22 @@ function calculateRiskLevel(
 }
 
 /**
- * 구별 통계 계산 및 최대 깊이순 정렬
+ * 구별 통계 계산 (DistrictGroup 기반)
  */
-// TODO: polygon 좌표 paths 정보 불필요
-function calculateDistrictStatistics(floodData: FloodData): DistrictStatistics[] {
-  const { polygons } = floodData
-
-  // 자치구별 그룹화
-  const districtMap = new Map<
-    string,
-    { count: number; maxDepth: number; totalDepth: number; areaKm2: number }
-  >()
-
-  // polygon 탐색
-  for (const polygon of polygons) {
-    const { district, depth_cm, area_km2 } = polygon.info
-    const current = districtMap.get(district) || {
-      count: 0,
-      maxDepth: 0,
-      totalDepth: 0,
-      areaKm2: 0
-    }
-
-    current.count += 1
-    current.maxDepth = Math.floor(Math.max(current.maxDepth, depth_cm))
-    current.totalDepth += depth_cm
-    current.areaKm2 = area_km2
-
-    districtMap.set(district, current)
+function calculateDistrictStatistics(districtGroup: DistrictGroup | undefined): DistrictStatistics[] {
+  if (!districtGroup || districtGroup.size === 0) {
+    return []
   }
 
-  // DistrictStatistics 배열로 변환 및 최대 깊이순 정렬
-  return Array.from(districtMap.entries())
-    .map(([name, stats]) => {
-      const avgDepth = Math.floor(stats.totalDepth / stats.count)
-
-      return {
-        name,
-        floodPointCount: stats.count,
-        maxDepth: stats.maxDepth,
-        avgDepth,
-        area: stats.areaKm2,
-        riskLevel: calculateRiskLevel(stats.count, stats.areaKm2, avgDepth, stats.maxDepth)
-      }
-    })
+  return Array.from(districtGroup.entries())
+    .map(([name, stats]) => ({
+      name,
+      floodPointCount: stats.count,
+      maxDepth: stats.maxDepth,
+      avgDepth: stats.avgDepth,
+      area: stats.areaKm2,
+      riskLevel: calculateRiskLevel(stats.count, stats.areaKm2, stats.avgDepth, stats.maxDepth)
+    }))
     .sort((a, b) => RISK_CONFIG[b.riskLevel].order - RISK_CONFIG[a.riskLevel].order)
 }
 
@@ -122,9 +99,9 @@ function DistrictCard({ district }: { district: DistrictStatistics }) {
   )
 }
 
-export function DistrictList({ floodData }: DistrictListProps) {
-  const districts = calculateDistrictStatistics(floodData)
-  console.log(districts)
+export function DistrictList({ period }: DistrictListProps) {
+  const { data } = useFloodData(period)
+  const districts = calculateDistrictStatistics(data)
 
   return (
     <section className='district-list'>

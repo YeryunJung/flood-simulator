@@ -1,17 +1,21 @@
-import type { FloodData } from '../../flood'
 import { MonthlySummary } from './MonthlySummary'
 import { DistrictList } from './DistrictList'
 import './styles.css'
 
-interface StatisticsPanelProps {
-  floodData: FloodData
+interface Period {
+  year: number
+  month: number
 }
 
-export function StatisticsPanel({ floodData }: StatisticsPanelProps) {
+interface StatisticsPanelProps {
+  period: Period
+}
+
+export function StatisticsPanel({ period }: StatisticsPanelProps) {
   return (
     <aside className='statistics-panel'>
-      <MonthlySummary floodData={floodData} />
-      <DistrictList floodData={floodData} />
+      <MonthlySummary period={period} />
+      <DistrictList period={period} />
     </aside>
   )
 }

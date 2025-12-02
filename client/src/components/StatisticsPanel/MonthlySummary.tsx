@@ -1,18 +1,20 @@
-import type { FloodData } from '../../flood'
+import { useFloodData, type DistrictGroup } from '../../hooks/useFloodData'
 import type { MonthlyStatistics } from '../../types/statistics'
 
+interface Period {
+  year: number
+  month: number
+}
+
 interface MonthlySummaryProps {
-  floodData: FloodData
+  period: Period
 }
 
 /**
- * 월별 통계 계산
- * Phase 2 로직 - 추후 utils/statistics.ts로 분리 예정
+ * 월별 통계 계산 (DistrictGroup 기반)
  */
-function calculateMonthlyStatistics(floodData: FloodData): MonthlyStatistics {
-  const { polygons } = floodData
-
-  if (polygons.length === 0) {
+function calculateMonthlyStatistics(districtGroup: DistrictGroup | undefined): MonthlyStatistics {
+  if (!districtGroup || districtGroup.size === 0) {
     return {
       districtCount: 0,
       floodPointCount: 0,
@@ -21,26 +23,22 @@ function calculateMonthlyStatistics(floodData: FloodData): MonthlyStatistics {
     }
   }
 
-  const districts = new Set(polygons.map((p) => p.info.district))
-  const maxDepth = Math.max(...polygons.map((p) => p.info.depth_cm))
-  const avgDepth = Math.floor(
-    polygons.map((p) => p.info.depth_cm).reduce((prev, cur) => prev + cur, 0) / polygons.length
-  )
+  let totalCount = 0
+  let totalDepth = 0
+  let maxDepth = 0
+
+  districtGroup.forEach((district) => {
+    totalCount += district.count
+    totalDepth += district.avgDepth * district.count
+    maxDepth = Math.max(maxDepth, district.maxDepth)
+  })
 
   return {
-    districtCount: districts.size,
-    floodPointCount: polygons.length,
-    avgDepth,
+    districtCount: districtGroup.size,
+    floodPointCount: totalCount,
+    avgDepth: Math.floor(totalDepth / totalCount),
     maxDepth
   }
-}
-
-/**
- * 연월 포맷팅
- */
-function formatYearMonth(yearMonth: string): string {
-  const [year, month] = yearMonth.split('-')
-  return `${year}년 ${parseInt(month, 10)}월`
 }
 
 /**
@@ -74,9 +72,12 @@ function StatCard({
 /**
  * 월별 통계 요약 컴포넌트
  */
-export function MonthlySummary({ floodData }: MonthlySummaryProps) {
-  const stats = calculateMonthlyStatistics(floodData)
-  const formattedPeriod = formatYearMonth(floodData.metadata.year_month)
+export function MonthlySummary({ period }: MonthlySummaryProps) {
+  const { year, month } = period
+
+  const { data } = useFloodData(period)
+  const stats = calculateMonthlyStatistics(data)
+  const formattedPeriod = `${year}년 ${month}월`
 
   return (
     <section className='monthly-summary'>

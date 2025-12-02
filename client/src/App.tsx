@@ -6,7 +6,7 @@ import './App.css'
 function App() {
   const now = new Date()
   const [period, setPeriod] = useState({ year: now.getFullYear(), month: now.getMonth() + 1 })
-  const { data: floodData, isLoading, error } = useFloodData(period)
+  const { isLoading, error } = useFloodData(period)
 
   return (
     <div className='app'>
@@ -51,7 +51,7 @@ function App() {
             <span className='map-placeholder__sub'>지도 영역</span>
           </div>
         </main>
-        {floodData && <StatisticsPanel floodData={floodData} />}
+        <StatisticsPanel period={period} />
       </div>
     </div>
   )
