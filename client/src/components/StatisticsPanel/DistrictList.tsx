@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { useFloodData, type DistrictGroup } from '../../hooks/useFloodData'
 import type { DistrictStatistics, RiskLevel } from '../../types/statistics'
 import { RISK_LEVEL } from '../../types/statistics'
@@ -58,7 +59,9 @@ function calculateRiskLevel(
 /**
  * 구별 통계 계산 (DistrictGroup 기반)
  */
-function calculateDistrictStatistics(districtGroup: DistrictGroup | undefined): DistrictStatistics[] {
+function calculateDistrictStatistics(
+  districtGroup: DistrictGroup | undefined
+): DistrictStatistics[] {
   if (!districtGroup || districtGroup.size === 0) {
     return []
   }
@@ -116,5 +119,42 @@ export function DistrictList({ period }: DistrictListProps) {
         <span className='empty-list'>표시할 데이터가 없어요</span>
       )}
     </section>
+  )
+}
+
+function DistrictCardSkeleton() {
+  return (
+    <li className='district-card district-card--skeleton'>
+      <div className='district-card__header'>
+        <div className='skeleton skeleton--name' />
+        <div className='skeleton skeleton--badge' />
+        <div className='skeleton skeleton--density' />
+      </div>
+      <div className='district-card__stats'>
+        <div className='skeleton skeleton--stat' />
+        <div className='skeleton skeleton--stat' />
+      </div>
+    </li>
+  )
+}
+
+function Skeleton() {
+  return (
+    <section className='district-list district-list--skeleton'>
+      <div className='skeleton skeleton--title' />
+      <ul className='district-list__items'>
+        {[1, 2, 3, 4].map((i) => (
+          <DistrictCardSkeleton key={i} />
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+export default function DistrictListLoader({ period }: DistrictListProps) {
+  return (
+    <Suspense fallback={<Skeleton />}>
+      <DistrictList period={period} />
+    </Suspense>
   )
 }

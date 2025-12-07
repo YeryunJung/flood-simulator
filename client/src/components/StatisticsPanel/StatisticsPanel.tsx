@@ -1,5 +1,5 @@
-import { MonthlySummary } from './MonthlySummary'
-import { DistrictList } from './DistrictList'
+import MonthlySummary from './MonthlySummary'
+import DistrictList from './DistrictList'
 import './styles.css'
 
 interface Period {

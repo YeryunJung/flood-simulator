@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import type { FloodData, FloodPolygon } from '../flood'
 
 // 데이터 페칭
@@ -77,7 +77,7 @@ function groupByDistrict(data: FloodData): DistrictGroup {
 
 // 자치구별 포맷 => select 옵션
 export function useFloodData(period: Period) {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: ['floodData', period.year, period.month],
     queryFn: () => fetchFloodData(period),
     select: groupByDistrict

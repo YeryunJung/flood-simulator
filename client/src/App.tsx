@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import { useFloodData } from './hooks/useFloodData'
 import { StatisticsPanel } from './components/StatisticsPanel/StatisticsPanel'
 import './App.css'
 
 function App() {
   const now = new Date()
-  const [period, setPeriod] = useState({ year: now.getFullYear(), month: now.getMonth() + 1 })
-  const { isLoading, error } = useFloodData(period)
+  const initialPeriod = { year: now.getFullYear(), month: 12 }
+  const [period, setPeriod] = useState(initialPeriod)
 
   return (
     <div className='app'>
@@ -22,7 +21,7 @@ function App() {
               })
             }
             placeholder='연도'
-            min='2020'
+            min='2018'
             max='2025'
           />
           <input
@@ -38,11 +37,7 @@ function App() {
             min='1'
             max='12'
           />
-          <button type='submit' disabled={isLoading}>
-            {isLoading ? '로딩...' : '조회'}
-          </button>
         </form>
-        {error && <p className='period-form__error'>{(error as Error).message}</p>}
       </header>
       <div className='app__content'>
         <main className='app__map'>

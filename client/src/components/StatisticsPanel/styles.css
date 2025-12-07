@@ -69,6 +69,74 @@
   color: gray;
 }
 
+/* Skeleton */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.skeleton {
+  background: #e5e7eb;
+  border-radius: 4px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton--title {
+  width: 140px;
+  height: 22px;
+  margin-bottom: 16px;
+}
+
+.skeleton--icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.skeleton--label {
+  width: 80px;
+  height: 13px;
+  margin-bottom: 6px;
+}
+
+.skeleton--value {
+  width: 60px;
+  height: 24px;
+}
+
+/* District List Skeleton */
+.skeleton--name {
+  width: 60px;
+  height: 15px;
+}
+
+.skeleton--badge {
+  width: 36px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+.skeleton--density {
+  width: 70px;
+  height: 12px;
+  margin-left: auto;
+}
+
+.skeleton--stat {
+  width: 64px;
+  height: 13px;
+}
+
+.district-card--skeleton .district-card__stats {
+  display: flex;
+  gap: 12px;
+}
+
 /* District List */
 .district-list {
   flex: 1;

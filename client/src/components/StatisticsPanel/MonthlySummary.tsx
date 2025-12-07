@@ -1,6 +1,6 @@
+import { Suspense } from 'react'
 import { useFloodData, type DistrictGroup } from '../../hooks/useFloodData'
 import type { MonthlyStatistics } from '../../types/statistics'
-
 interface Period {
   year: number
   month: number
@@ -42,6 +42,28 @@ function calculateMonthlyStatistics(districtGroup: DistrictGroup | undefined): M
 }
 
 /**
+ * Skeleton 컴포넌트 (로딩 상태)
+ */
+function Skeleton() {
+  return (
+    <section className='monthly-summary monthly-summary--skeleton'>
+      <div className='skeleton skeleton--title' />
+      <div className='monthly-summary__cards'>
+        {[1, 2, 3].map((i) => (
+          <div key={i} className='stat-card'>
+            <div className='skeleton skeleton--icon' />
+            <div className='stat-card__content'>
+              <div className='skeleton skeleton--label' />
+              <div className='skeleton skeleton--value' />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/**
  * 통계 카드 컴포넌트
  */
 function StatCard({
@@ -76,6 +98,7 @@ export function MonthlySummary({ period }: MonthlySummaryProps) {
   const { year, month } = period
 
   const { data } = useFloodData(period)
+
   const stats = calculateMonthlyStatistics(data)
   const formattedPeriod = `${year}년 ${month}월`
 
@@ -88,5 +111,13 @@ export function MonthlySummary({ period }: MonthlySummaryProps) {
         <StatCard icon='📏' label='평균 침수 깊이' value={stats.avgDepth} unit='cm' />
       </div>
     </section>
+  )
+}
+
+export default function MonthlySummaryLoader({ period }: MonthlySummaryProps) {
+  return (
+    <Suspense fallback={<Skeleton />}>
+      <MonthlySummary period={period} />
+    </Suspense>
   )
 }
