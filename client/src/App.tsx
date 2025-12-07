@@ -3,9 +3,10 @@ import { StatisticsPanel } from './components/StatisticsPanel/StatisticsPanel'
 import './App.css'
 
 function App() {
-  const now = new Date()
-  const initialPeriod = { year: now.getFullYear(), month: 12 }
-  const [period, setPeriod] = useState(initialPeriod)
+  const [period, setPeriod] = useState(() => {
+    const now = new Date()
+    return { year: now.getFullYear(), month: 12 }
+  })
 
   return (
     <div className='app'>
