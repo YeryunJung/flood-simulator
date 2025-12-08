@@ -1,12 +1,9 @@
-import { useState } from 'react'
 import { StatisticsPanel } from './components/StatisticsPanel/StatisticsPanel'
 import './App.css'
+import usePeriodStore from './stores/period'
 
 function App() {
-  const [period, setPeriod] = useState(() => {
-    const now = new Date()
-    return { year: now.getFullYear(), month: 12 }
-  })
+  const { period, setPeriod } = usePeriodStore()
 
   return (
     <div className='app'>
@@ -15,12 +12,7 @@ function App() {
           <input
             type='number'
             value={period.year}
-            onChange={(e) =>
-              setPeriod({
-                ...period,
-                year: Number(e.target.value)
-              })
-            }
+            onChange={(e) => setPeriod(Number(e.target.value), period.month)}
             placeholder='연도'
             min='2018'
             max='2025'
@@ -28,12 +20,7 @@ function App() {
           <input
             type='number'
             value={period.month}
-            onChange={(e) =>
-              setPeriod({
-                ...period,
-                month: Number(e.target.value)
-              })
-            }
+            onChange={(e) => setPeriod(period.year, Number(e.target.value))}
             placeholder='월'
             min='1'
             max='12'
@@ -47,7 +34,7 @@ function App() {
             <span className='map-placeholder__sub'>지도 영역</span>
           </div>
         </main>
-        <StatisticsPanel period={period} />
+        <StatisticsPanel />
       </div>
     </div>
   )

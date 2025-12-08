@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { useFloodData, type DistrictGroup } from '../../hooks/useFloodData'
 import type { MonthlyStatistics } from '../../types/statistics'
+import usePeriodStore from '../../stores/period'
 interface Period {
   year: number
   month: number
@@ -94,9 +95,9 @@ function StatCard({
 /**
  * 월별 통계 요약 컴포넌트
  */
-export function MonthlySummary({ period }: MonthlySummaryProps) {
+export function MonthlySummary() {
+  const period = usePeriodStore((store) => store.period)
   const { year, month } = period
-
   const { data } = useFloodData(period)
 
   const stats = calculateMonthlyStatistics(data)
@@ -114,10 +115,10 @@ export function MonthlySummary({ period }: MonthlySummaryProps) {
   )
 }
 
-export default function MonthlySummaryLoader({ period }: MonthlySummaryProps) {
+export default function MonthlySummaryLoader() {
   return (
     <Suspense fallback={<Skeleton />}>
-      <MonthlySummary period={period} />
+      <MonthlySummary />
     </Suspense>
   )
 }

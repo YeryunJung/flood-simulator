@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { useFloodData, type DistrictGroup } from '../../hooks/useFloodData'
 import type { DistrictStatistics, RiskLevel } from '../../types/statistics'
 import { RISK_LEVEL } from '../../types/statistics'
+import usePeriodStore from '../../stores/period'
 
 interface Period {
   year: number
@@ -102,7 +103,8 @@ function DistrictCard({ district }: { district: DistrictStatistics }) {
   )
 }
 
-export function DistrictList({ period }: DistrictListProps) {
+export function DistrictList() {
+  const period = usePeriodStore((store) => store.period)
   const { data } = useFloodData(period)
   const districts = calculateDistrictStatistics(data)
 
@@ -151,10 +153,10 @@ function Skeleton() {
   )
 }
 
-export default function DistrictListLoader({ period }: DistrictListProps) {
+export default function DistrictListLoader() {
   return (
     <Suspense fallback={<Skeleton />}>
-      <DistrictList period={period} />
+      <DistrictList />
     </Suspense>
   )
 }
