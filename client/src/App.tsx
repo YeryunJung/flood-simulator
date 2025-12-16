@@ -15,7 +15,7 @@ function App() {
 
       try {
         const response = await fetch(
-          `${env.API_END_POINT}/monthly-flood-data/flood_data_2024_01.json`
+          `${env.API_END_POINT}/monthly-flood-data/flood_data_2024_06.json`
         )
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`)
