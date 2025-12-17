@@ -22,7 +22,7 @@ export interface FloodInfo {
   /** 침수 깊이 (cm) */
   depth_cm: number
 
-  /** 침수 면적 (m²) */
+  /** 침수 면적 (km²) */
   area_km2: number
 
   /** 침수 시작 날짜 (YYYYMMDD 형식) */

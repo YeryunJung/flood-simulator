@@ -1,15 +1,9 @@
 import { Suspense } from 'react'
-import { useFloodData, type DistrictGroup } from '../../hooks/useFloodData'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { fetchFloodData } from '../../api/flood'
+import { groupByDistrict, type DistrictGroup } from '../../domain/flood'
 import type { MonthlyStatistics } from '../../types/statistics'
 import usePeriodStore from '../../stores/period'
-interface Period {
-  year: number
-  month: number
-}
-
-interface MonthlySummaryProps {
-  period: Period
-}
 
 /**
  * 월별 통계 계산 (DistrictGroup 기반)
@@ -98,7 +92,11 @@ function StatCard({
 export function MonthlySummary() {
   const period = usePeriodStore((store) => store.period)
   const { year, month } = period
-  const { data } = useFloodData(period)
+  const { data } = useSuspenseQuery({
+    queryKey: ['floodData', year, month],
+    queryFn: () => fetchFloodData(period),
+    select: groupByDistrict
+  })
 
   const stats = calculateMonthlyStatistics(data)
   const formattedPeriod = `${year}년 ${month}월`
