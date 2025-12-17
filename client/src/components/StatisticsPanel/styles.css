@@ -1,0 +1,293 @@
+/* Statistics Panel */
+.statistics-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: #f9fafb;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Monthly Summary */
+.monthly-summary {
+  flex-shrink: 0;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.monthly-summary__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px 0;
+}
+
+.monthly-summary__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Stat Card */
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stat-card__icon {
+  font-size: 20px;
+}
+
+.stat-card__content {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-card__label {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.stat-card__value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.stat-card__unit {
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: 2px;
+}
+
+.empty-list {
+  font-size: 14px;
+  color: gray;
+}
+
+/* Skeleton */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.skeleton {
+  background: #e5e7eb;
+  border-radius: 4px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton--title {
+  width: 140px;
+  height: 22px;
+  margin-bottom: 16px;
+}
+
+.skeleton--icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.skeleton--label {
+  width: 80px;
+  height: 13px;
+  margin-bottom: 6px;
+}
+
+.skeleton--value {
+  width: 60px;
+  height: 24px;
+}
+
+/* District List Skeleton */
+.skeleton--name {
+  width: 60px;
+  height: 15px;
+}
+
+.skeleton--badge {
+  width: 36px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+.skeleton--density {
+  width: 70px;
+  height: 12px;
+  margin-left: auto;
+}
+
+.skeleton--stat {
+  width: 64px;
+  height: 13px;
+}
+
+.district-card--skeleton .district-card__stats {
+  display: flex;
+  gap: 12px;
+}
+
+/* District List */
+.district-list {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.district-list__title {
+  flex-shrink: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px 0;
+}
+
+.district-list__items {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* District Card */
+.district-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.district-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.district-card__name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.district-card__density {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-left: auto;
+}
+
+.district-card__stats {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* Risk Badge */
+.risk-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.risk-badge--green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.risk-badge--orange {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.risk-badge--red {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .statistics-panel {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .monthly-summary,
+  .district-list {
+    padding: 16px;
+    border-radius: 10px;
+  }
+
+  .monthly-summary__title {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .stat-card__value {
+    font-size: 20px;
+  }
+
+  .stat-card__label {
+    font-size: 12px;
+  }
+
+  .district-list__title {
+    font-size: 14px;
+  }
+
+  .district-card {
+    padding: 10px;
+  }
+
+  .district-card__name {
+    font-size: 14px;
+  }
+
+  .district-card__stats {
+    font-size: 12px;
+  }
+
+  .risk-badge {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .statistics-panel {
+    padding: 8px;
+  }
+
+  .monthly-summary,
+  .district-list {
+    padding: 12px;
+  }
+
+  .stat-card__value {
+    font-size: 18px;
+  }
+
+  .stat-card__icon {
+    font-size: 16px;
+  }
+}
