@@ -1,4 +1,4 @@
-import { Suspense } from 'react'
+import { Suspense, useDeferredValue } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { floodQueryOptions } from '../../api/flood'
 import { calculateDistrictStatistics, groupByDistrict, RISK_CONFIG } from '../../domain/flood'
@@ -31,14 +31,23 @@ function DistrictCard({ district }: { district: DistrictStatistics }) {
 
 export function DistrictList() {
   const period = usePeriodStore((store) => store.period)
+  const deferredPeriod = useDeferredValue(period)
   const { data } = useSuspenseQuery({
-    ...floodQueryOptions(period),
+    ...floodQueryOptions(deferredPeriod),
     select: groupByDistrict
   })
   const districts = calculateDistrictStatistics(data)
 
+  const isPending = period !== deferredPeriod
+
   return (
-    <section className='district-list'>
+    <section
+      className='district-list'
+      style={{
+        opacity: isPending ? 0.5 : 1,
+        transition: 'opacity 0.2s ease-in-out'
+      }}
+    >
       <h2 className='district-list__title'>자치구별 현황</h2>
       {districts.length ? (
         <ul className='district-list__items'>
@@ -50,6 +59,14 @@ export function DistrictList() {
         <span className='empty-list'>표시할 데이터가 없어요</span>
       )}
     </section>
+  )
+}
+
+export default function DistrictListLoader() {
+  return (
+    <Suspense fallback={<Skeleton />}>
+      <DistrictList />
+    </Suspense>
   )
 }
 
@@ -79,13 +96,5 @@ function Skeleton() {
         ))}
       </ul>
     </section>
-  )
-}
-
-export default function DistrictListLoader() {
-  return (
-    <Suspense fallback={<Skeleton />}>
-      <DistrictList />
-    </Suspense>
   )
 }

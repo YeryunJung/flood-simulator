@@ -1,4 +1,4 @@
-import { Suspense } from 'react'
+import { Suspense, useDeferredValue } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { floodQueryOptions } from '../../api/flood'
 import { groupByDistrict, type DistrictGroup } from '../../domain/flood'
@@ -91,17 +91,26 @@ function StatCard({
  */
 export function MonthlySummary() {
   const period = usePeriodStore((store) => store.period)
-  const { year, month } = period
+  const deferredValue = useDeferredValue(period)
+  const { year, month } = deferredValue
   const { data } = useSuspenseQuery({
-    ...floodQueryOptions(period),
+    ...floodQueryOptions(deferredValue),
     select: groupByDistrict
   })
 
   const stats = calculateMonthlyStatistics(data)
   const formattedPeriod = `${year}년 ${month}월`
 
+  const isPending = period !== deferredValue
+
   return (
-    <section className='monthly-summary'>
+    <section
+      className='monthly-summary'
+      style={{
+        opacity: isPending ? 0.5 : 1,
+        transition: 'opacity 0.2s ease-in-out'
+      }}
+    >
       <h2 className='monthly-summary__title'>{formattedPeriod} 침수 현황</h2>
       <div className='monthly-summary__cards'>
         <StatCard icon='🏘️' label='침수 자치구' value={stats.districtCount} unit='개' />
