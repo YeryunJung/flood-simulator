@@ -1,3 +1,4 @@
+import { queryOptions } from '@tanstack/react-query'
 import type { FloodData } from '../types/flood'
 
 export interface Period {
@@ -5,7 +6,13 @@ export interface Period {
   month: number
 }
 
-export async function fetchFloodData(period: Period): Promise<FloodData> {
+export const floodQueryOptions = (period: Period) =>
+  queryOptions({
+    queryKey: ['floodData', period.year, period.month],
+    queryFn: () => fetchFloodData(period)
+  })
+
+async function fetchFloodData(period: Period): Promise<FloodData> {
   const { year, month } = period
   const monthStr = String(month).padStart(2, '0')
   const res = await fetch(`/monthly-flood-data/flood_data_${year}_${monthStr}.json`)

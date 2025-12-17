@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { fetchFloodData } from '../../api/flood'
+import { floodQueryOptions } from '../../api/flood'
 import { groupByDistrict, type DistrictGroup } from '../../domain/flood'
 import type { MonthlyStatistics } from '../../types/statistics'
 import usePeriodStore from '../../stores/period'
@@ -93,8 +93,7 @@ export function MonthlySummary() {
   const period = usePeriodStore((store) => store.period)
   const { year, month } = period
   const { data } = useSuspenseQuery({
-    queryKey: ['floodData', year, month],
-    queryFn: () => fetchFloodData(period),
+    ...floodQueryOptions(period),
     select: groupByDistrict
   })
 

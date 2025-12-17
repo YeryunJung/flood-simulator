@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { fetchFloodData } from '../../api/flood'
+import { floodQueryOptions } from '../../api/flood'
 import { calculateDistrictStatistics, groupByDistrict, RISK_CONFIG } from '../../domain/flood'
 import type { DistrictStatistics, RiskLevel } from '../../types/statistics'
 import usePeriodStore from '../../stores/period'
@@ -31,10 +31,8 @@ function DistrictCard({ district }: { district: DistrictStatistics }) {
 
 export function DistrictList() {
   const period = usePeriodStore((store) => store.period)
-  const { year, month } = period
   const { data } = useSuspenseQuery({
-    queryKey: ['floodData', year, month],
-    queryFn: () => fetchFloodData(period),
+    ...floodQueryOptions(period),
     select: groupByDistrict
   })
   const districts = calculateDistrictStatistics(data)
