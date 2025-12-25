@@ -1,4 +1,4 @@
-import { Suspense, useDeferredValue } from 'react'
+import { Suspense, useDeferredValue, useMemo } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { floodQueryOptions } from '../../api/flood'
 import { groupByDistrict, type DistrictGroup } from '../../domain/flood'
@@ -93,12 +93,15 @@ export function MonthlySummary() {
   const period = usePeriodStore((store) => store.period)
   const deferredValue = useDeferredValue(period)
   const { year, month } = deferredValue
-  const { data } = useSuspenseQuery({
-    ...floodQueryOptions(deferredValue),
-    select: groupByDistrict
+  const { data: rawData } = useSuspenseQuery({
+    ...floodQueryOptions(deferredValue)
   })
 
-  const stats = calculateMonthlyStatistics(data)
+  const data = useMemo(() => {
+    return groupByDistrict(rawData)
+  }, [rawData])
+
+  const stats = useMemo(() => calculateMonthlyStatistics(data), [data])
   const formattedPeriod = `${year}년 ${month}월`
 
   const isPending = period !== deferredValue
