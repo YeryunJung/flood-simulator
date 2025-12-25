@@ -1,4 +1,4 @@
-import { Suspense, useDeferredValue, useMemo } from 'react'
+import { Suspense, useDeferredValue, useMemo, memo } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { floodQueryOptions } from '../../api/flood'
 import { groupByDistrict, type DistrictGroup } from '../../domain/flood'
@@ -60,8 +60,12 @@ function Skeleton() {
 
 /**
  * 통계 카드 컴포넌트
+ *
+ * memo 적용 이유:
+ * - 부모(MonthlySummary)가 리렌더링되어도 props가 동일하면 렌더링 건너뜀
+ * - React Compiler는 내부 값 캐싱만 수행, 컴포넌트 렌더링 건너뛰기는 memo가 필요
  */
-function StatCard({
+const StatCard = memo(function StatCard({
   icon,
   label,
   value,
@@ -84,7 +88,7 @@ function StatCard({
       </div>
     </div>
   )
-}
+})
 
 /**
  * 월별 통계 요약 컴포넌트
