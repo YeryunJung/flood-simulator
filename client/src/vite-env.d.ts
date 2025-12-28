@@ -10,3 +10,5 @@ declare global {
         navermap_authFailure?: () => void
     }
 }
+
+export {}
