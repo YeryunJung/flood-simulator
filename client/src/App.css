@@ -41,6 +41,18 @@
   flex-shrink: 0;
 }
 
+.map-page {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  padding: 0;
+  margin: 0;
+}
+
+.card {
+  padding: 2em;
+}
+
 /* Period Form */
 .period-form {
   display: flex;

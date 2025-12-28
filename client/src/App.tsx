@@ -1,6 +1,7 @@
 import { StatisticsPanel } from './components/StatisticsPanel/StatisticsPanel'
-import './App.css'
+import { FloodMap } from './components/FloodMap/FloodMap'
 import usePeriodStore from './stores/period'
+import './App.css'
 
 function App() {
   const { period, setPeriod } = usePeriodStore()
@@ -29,10 +30,7 @@ function App() {
       </header>
       <div className='app__content'>
         <main className='app__map'>
-          <div className='map-placeholder'>
-            <span>서울시 지도</span>
-            <span className='map-placeholder__sub'>지도 영역</span>
-          </div>
+          <FloodMap />
         </main>
         <StatisticsPanel />
       </div>
