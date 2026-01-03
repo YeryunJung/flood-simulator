@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useState, useMemo, useDeferredValue } from 'react'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useNaverMap } from '../../hooks/useNaverMap'
 import { useFloodClusters } from '../../hooks/useFloodClusters'
 import { floodQueryOptions } from '../../api/flood'
@@ -24,6 +24,7 @@ export function FloodMap({
                            showControls = false,
                          }: FloodMapProps) {
   const { period, setPeriod } = usePeriodStore()
+  const deferredPeriod = useDeferredValue(period)
   const [clusteringEnabled, setClusteringEnabled] = useState(enableClustering)
   const legend = useMemo(() => getFloodLegend(), [])
 
@@ -31,9 +32,10 @@ export function FloodMap({
     center: SEOUL_CENTER,
     zoom: 13,
   })
-  const { data: floodData, isLoading: dataLoading, error: dataError } = useQuery(
-    floodQueryOptions(period)
-  )
+  const { data: floodData, isLoading: dataLoading, error: dataError } = useQuery({
+    ...floodQueryOptions(deferredPeriod),
+    placeholderData: keepPreviousData
+  })
   const { currentZoom, isClustered, clusterCount } = useFloodClusters({
     map,
     polygons: floodData?.polygons ?? [],
