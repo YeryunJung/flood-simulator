@@ -30,7 +30,6 @@ export function useNaverMap(options: UseNaverMapOptions = {}): UseNaverMapReturn
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<naver.maps.Map | null>(null)
 
-  const [map, setMap] = useState<naver.maps.Map | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -47,7 +46,6 @@ export function useNaverMap(options: UseNaverMapOptions = {}): UseNaverMapReturn
     }
 
     mapInstanceRef.current = null
-    setMap(null)
     setIsLoaded(false)
   })
 
@@ -59,7 +57,6 @@ export function useNaverMap(options: UseNaverMapOptions = {}): UseNaverMapReturn
     if (!mapRef.current || !window.naver?.maps) return
 
     if (mapInstanceRef.current) {
-      setMap(mapInstanceRef.current)
       setIsLoaded(true)
       return
     }
@@ -80,7 +77,6 @@ export function useNaverMap(options: UseNaverMapOptions = {}): UseNaverMapReturn
 
       const newMap = new window.naver.maps.Map(mapRef.current, mapOptions)
       mapInstanceRef.current = newMap
-      setMap(newMap)
       setIsLoaded(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : '지도 초기화에 실패했습니다.')
@@ -145,10 +141,11 @@ export function useNaverMap(options: UseNaverMapOptions = {}): UseNaverMapReturn
 
   // center/zoom 변경 시 기존 맵에 반영
   useEffect(() => {
-    if (!map || !window.naver?.maps) return
-    map.setCenter(new window.naver.maps.LatLng(center.lat, center.lng))
-    map.setZoom(zoom)
-  }, [map, center.lat, center.lng, zoom])
+    const mapInstance = mapInstanceRef.current
+    if (!mapInstance || !window.naver?.maps) return
+    mapInstance.setCenter(new window.naver.maps.LatLng(center.lat, center.lng))
+    mapInstance.setZoom(zoom)
+  }, [isLoaded, center.lat, center.lng, zoom])
 
-  return { mapRef, map, isLoaded, error }
+  return { mapRef, map: mapInstanceRef.current, isLoaded, error }
 }

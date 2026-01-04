@@ -19,6 +19,13 @@ interface Cluster {
   center: naver.maps.Coord
   polygons: FloodPolygon[]
   avgDepth: number
+  /** 클러스터 내 모든 폴리곤을 감싸는 경계 (클릭 시 줌인 영역) */
+  bounds: {
+    minLat: number
+    minLng: number
+    maxLat: number
+    maxLng: number
+  }
 }
 
 interface UseFloodClustersOptions {
@@ -63,6 +70,10 @@ function clusterPolygonsByPixel(
     sumX: number
     sumY: number
     count: number
+    minLat: number
+    minLng: number
+    maxLat: number
+    maxLng: number
   }
 
   const grid: Map<string, GridCell> = new Map()
@@ -78,7 +89,16 @@ function clusterPolygonsByPixel(
     )}`
 
     if (!grid.has(gridKey)) {
-      grid.set(gridKey, { polygons: [], sumX: 0, sumY: 0, count: 0 })
+      grid.set(gridKey, {
+        polygons: [],
+        sumX: 0,
+        sumY: 0,
+        count: 0,
+        minLat: Number.POSITIVE_INFINITY,
+        minLng: Number.POSITIVE_INFINITY,
+        maxLat: Number.NEGATIVE_INFINITY,
+        maxLng: Number.NEGATIVE_INFINITY,
+      })
     }
 
     const cell = grid.get(gridKey)!
@@ -86,6 +106,12 @@ function clusterPolygonsByPixel(
     cell.sumX += pixelPoint.x
     cell.sumY += pixelPoint.y
     cell.count += 1
+    polygon.paths.forEach(([lat, lng]) => {
+      cell.minLat = Math.min(cell.minLat, lat)
+      cell.minLng = Math.min(cell.minLng, lng)
+      cell.maxLat = Math.max(cell.maxLat, lat)
+      cell.maxLng = Math.max(cell.maxLng, lng)
+    })
   })
 
   const clusters: Cluster[] = []
@@ -106,6 +132,12 @@ function clusterPolygonsByPixel(
       center: centerCoord,
       polygons: cell.polygons,
       avgDepth,
+      bounds: {
+        minLat: cell.minLat,
+        minLng: cell.minLng,
+        maxLat: cell.maxLat,
+        maxLng: cell.maxLng,
+      },
     })
   })
 
@@ -192,12 +224,12 @@ export function useFloodClusters({
         window.naver.maps.Event.addListener(marker, 'click', () => {
           const bounds = new window.naver.maps.LatLngBounds(
             new window.naver.maps.LatLng(
-              Math.min(...cluster.polygons.flatMap((p) => p.paths.map(([lat]) => lat))),
-              Math.min(...cluster.polygons.flatMap((p) => p.paths.map(([, lng]) => lng)))
+              cluster.bounds.minLat,
+              cluster.bounds.minLng
             ),
             new window.naver.maps.LatLng(
-              Math.max(...cluster.polygons.flatMap((p) => p.paths.map(([lat]) => lat))),
-              Math.max(...cluster.polygons.flatMap((p) => p.paths.map(([, lng]) => lng)))
+              cluster.bounds.maxLat,
+              cluster.bounds.maxLng
             )
           )
           map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 })
