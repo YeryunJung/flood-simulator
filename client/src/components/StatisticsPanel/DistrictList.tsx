@@ -1,4 +1,4 @@
-import { Suspense, useDeferredValue } from 'react'
+import { memo, Suspense, useDeferredValue, useMemo } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { floodQueryOptions } from '../../api/flood'
 import { calculateDistrictStatistics, groupByDistrict, RISK_CONFIG } from '../../domain/flood'
@@ -10,7 +10,7 @@ function RiskBadge({ level }: { level: RiskLevel }) {
   return <span className={`risk-badge risk-badge--${config.color}`}>{config.label}</span>
 }
 
-function DistrictCard({ district }: { district: DistrictStatistics }) {
+const DistrictCard = memo(function DistrictCard({ district }: { district: DistrictStatistics }) {
   const density = district.area > 0 ? (district.floodPointCount / district.area).toFixed(4) : '0'
 
   return (
@@ -27,16 +27,22 @@ function DistrictCard({ district }: { district: DistrictStatistics }) {
       </div>
     </li>
   )
-}
+})
 
 export function DistrictList() {
   const period = usePeriodStore((store) => store.period)
   const deferredPeriod = useDeferredValue(period)
-  const { data } = useSuspenseQuery({
+
+  const { data: rawData } = useSuspenseQuery({
     ...floodQueryOptions(deferredPeriod),
-    select: groupByDistrict
   })
-  const districts = calculateDistrictStatistics(data)
+
+  // 서버 상태 변경 시 데이터 포맷 함수 호출 
+  const data = useMemo(() => {
+    return groupByDistrict(rawData)
+  }, [rawData])
+
+  const districts = useMemo(() => calculateDistrictStatistics(data), [data])
 
   const isPending = period !== deferredPeriod
 
