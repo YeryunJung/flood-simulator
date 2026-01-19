@@ -1,0 +1,234 @@
+.flood-map-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f5f5f5;
+}
+
+.flood-map {
+  width: 100%;
+  height: 100%;
+}
+
+.flood-map-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(245, 245, 245, 0.9);
+  z-index: 5;
+}
+
+.flood-map-loading span {
+  padding: 12px 24px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  color: #333;
+}
+
+.flood-map-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff5f5;
+  border: 1px solid #ffccc7;
+}
+
+.flood-map-error p {
+  color: #cf1322;
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
+}
+
+.flood-map-info {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  font-size: 13px;
+  color: #333;
+  z-index: 10;
+}
+
+.flood-map-info-count {
+  padding: 2px 8px;
+  background-color: #3498db;
+  color: white;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.flood-map-controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.flood-map-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background-color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.flood-map-filter-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.flood-map-select {
+  padding: 6px 28px 6px 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  min-width: 70px;
+}
+
+.flood-map-select:hover {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.flood-map-select:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.flood-map-toggle {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.flood-map-toggle:hover {
+  background-color: #e9ecef;
+}
+
+.flood-map-toggle.active {
+  background-color: #3498db;
+  border-color: #3498db;
+  color: white;
+}
+
+.flood-map-cluster-info {
+  position: absolute;
+  bottom: 24px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  font-size: 12px;
+  color: #555;
+  z-index: 10;
+}
+
+.cluster-badge {
+  padding: 2px 8px;
+  background-color: #e74c3c;
+  color: white;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.polygon-badge {
+  padding: 2px 8px;
+  background-color: #27ae60;
+  color: white;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.flood-map-legend {
+  position: absolute;
+  bottom: 24px;
+  left: 12px;
+  padding: 12px 16px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  z-index: 10;
+}
+
+.flood-map-legend-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #eee;
+}
+
+.flood-map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #555;
+  margin-top: 6px;
+}
+
+.flood-map-legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  opacity: 0.7;
+}
+
+.flood-map-empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  font-size: 14px;
+  color: #666;
+  z-index: 100;
+}
