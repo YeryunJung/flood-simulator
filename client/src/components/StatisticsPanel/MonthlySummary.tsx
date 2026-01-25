@@ -1,4 +1,4 @@
-import { Suspense } from 'react'
+import { Suspense, useDeferredValue, useMemo, memo } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { floodQueryOptions } from '../../api/flood'
 import { groupByDistrict, type DistrictGroup } from '../../domain/flood'
@@ -60,8 +60,12 @@ function Skeleton() {
 
 /**
  * 통계 카드 컴포넌트
+ *
+ * memo 적용 이유:
+ * - 부모(MonthlySummary)가 리렌더링되어도 props가 동일하면 렌더링 건너뜀
+ * - React Compiler는 내부 값 캐싱만 수행, 컴포넌트 렌더링 건너뛰기는 memo가 필요
  */
-function StatCard({
+const StatCard = memo(function StatCard({
   icon,
   label,
   value,
@@ -84,24 +88,36 @@ function StatCard({
       </div>
     </div>
   )
-}
+})
 
 /**
  * 월별 통계 요약 컴포넌트
  */
 export function MonthlySummary() {
   const period = usePeriodStore((store) => store.period)
-  const { year, month } = period
-  const { data } = useSuspenseQuery({
-    ...floodQueryOptions(period),
-    select: groupByDistrict
+  const deferredValue = useDeferredValue(period)
+  const { year, month } = deferredValue
+  const { data: rawData } = useSuspenseQuery({
+    ...floodQueryOptions(deferredValue)
   })
 
-  const stats = calculateMonthlyStatistics(data)
+  const data = useMemo(() => {
+    return groupByDistrict(rawData)
+  }, [rawData])
+
+  const stats = useMemo(() => calculateMonthlyStatistics(data), [data])
   const formattedPeriod = `${year}년 ${month}월`
 
+  const isPending = period !== deferredValue
+
   return (
-    <section className='monthly-summary'>
+    <section
+      className='monthly-summary'
+      style={{
+        opacity: isPending ? 0.5 : 1,
+        transition: 'opacity 0.2s ease-in-out'
+      }}
+    >
       <h2 className='monthly-summary__title'>{formattedPeriod} 침수 현황</h2>
       <div className='monthly-summary__cards'>
         <StatCard icon='🏘️' label='침수 자치구' value={stats.districtCount} unit='개' />
