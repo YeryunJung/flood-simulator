@@ -9,8 +9,7 @@ interface PeriodStore {
 }
 
 const getInitialPeriod = () => {
-  const now = new Date()
-  return { year: now.getFullYear(), month: now.getMonth() + 1 }
+  return { year: 2023, month: 8 } // 침수 데이터가 있는 2023년 8월을 기본값으로 설정
 }
 
 const usePeriodStore = create<PeriodStore>((set) => ({
