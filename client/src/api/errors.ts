@@ -47,3 +47,33 @@ export function isNetworkError(error: unknown): error is NetworkError {
 export function isNotFoundError(error: unknown): boolean {
   return isApiError(error) && error.isNotFound
 }
+
+// 안전한 Error 객체로 변환
+export function normalizeError(error: unknown): Error {
+  if (error instanceof Error) {
+    return error
+  }
+  if (typeof error === 'string') {
+    return new Error(error)
+  }
+  if (error && typeof error === 'object' && 'message' in error) {
+    return new Error(String(error.message))
+  }
+  return new Error('알 수 없는 오류가 발생했습니다')
+}
+
+// 사용자에게 안전한 에러 메시지 반환 (민감정보 필터링)
+export function getUserFriendlyMessage(error: Error, isDevelopment = false): string {
+  if (isDevelopment) {
+    return error.message
+  }
+
+  if (isApiError(error)) {
+    return error.userMessage
+  }
+  if (isNetworkError(error)) {
+    return '네트워크 연결을 확인해주세요'
+  }
+
+  return '일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요'
+}
