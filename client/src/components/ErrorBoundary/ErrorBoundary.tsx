@@ -32,10 +32,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (this.state.hasError && this.props.resetKeys) {
       const prevKeys = prevProps.resetKeys ?? []
       const currentKeys = this.props.resetKeys
-      const hasChanged = currentKeys.some((key, index) => key !== prevKeys[index])
+      const hasChanged =
+        prevKeys.length !== currentKeys.length ||
+        currentKeys.some((key, index) => !Object.is(key, prevKeys[index]))
 
       if (hasChanged) {
-        this.reset()
+        this.resetSilently()
       }
     }
   }
@@ -45,8 +47,18 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   reset = () => {
+    this.resetWithNotify()
+  }
+
+  private resetSilently = () => {
+    this.resetWithNotify(false)
+  }
+
+  private resetWithNotify = (shouldNotify = true) => {
     this.setState({ hasError: false, error: null })
-    this.props.onReset?.()
+    if (shouldNotify) {
+      this.props.onReset?.()
+    }
   }
 
   render() {
