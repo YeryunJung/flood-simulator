@@ -1,10 +1,17 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { StatisticsPanel } from './components/StatisticsPanel/StatisticsPanel'
 import { FloodMap } from './components/FloodMap/FloodMap'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import usePeriodStore from './stores/period'
 import './App.css'
 
 function App() {
   const { period, setPeriod } = usePeriodStore()
+
+  const queryClient = useQueryClient()
+  const handleReset = () => {
+    queryClient.invalidateQueries()
+  }
 
   return (
     <div className='app'>
@@ -30,9 +37,13 @@ function App() {
       </header>
       <div className='app__content'>
         <main className='app__map'>
-          <FloodMap />
+          <ErrorBoundary level="widget" onReset={handleReset}>
+            <FloodMap />
+          </ErrorBoundary>
         </main>
-        <StatisticsPanel />
+        <ErrorBoundary level="widget" onReset={handleReset}>
+          <StatisticsPanel />
+        </ErrorBoundary>
       </div>
     </div>
   )
