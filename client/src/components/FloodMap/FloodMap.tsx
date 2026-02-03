@@ -45,8 +45,8 @@ export function FloodMap({
   const error = mapError || dataError?.message
   if (error) {
     return (
-        <div className={`flood-map-container flood-map-error ${className}`}>
-          <p>{error}</p>
+        <div className={`flood-map-container flood-map-error ${className}`} data-testid="floodmap-error-container">
+          <p data-testid="floodmap-error-message">{error}</p>
         </div>
     )
   }

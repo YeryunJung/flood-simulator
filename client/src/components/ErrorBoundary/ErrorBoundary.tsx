@@ -99,15 +99,15 @@ function ErrorFallback({ error, onReset, level }: ErrorFallbackProps) {
   const errorMessage = getUserFriendlyMessage(error, import.meta.env.DEV)
 
   return (
-    <div className={`error-fallback error-fallback--${level}`}>
-      <span className="error-fallback__icon">{isNetwork ? '📡' : '⚠️'}</span>
-      <h3 className="error-fallback__title">
+    <div className={`error-fallback error-fallback--${level}`} data-testid="error-fallback-container">
+      <span className="error-fallback__icon" data-testid="error-fallback-icon">{isNetwork ? '📡' : '⚠️'}</span>
+      <h3 className="error-fallback__title" data-testid="error-fallback-title">
         {level === 'root' ? '앱에 문제가 발생했습니다' : '문제가 발생했습니다'}
       </h3>
-      <p className="error-fallback__message">
+      <p className="error-fallback__message" data-testid="error-fallback-message">
         {errorMessage}
       </p>
-      <button className="error-fallback__button" onClick={onReset}>
+      <button className="error-fallback__button" data-testid="error-fallback-retry-btn" onClick={onReset}>
         다시 시도
       </button>
     </div>
@@ -121,19 +121,20 @@ export function RootErrorFallback({ error, onReset }: { error: Error | null; onR
     : '예상치 못한 오류가 발생했습니다'
 
   return (
-    <div className="error-fallback error-fallback--root error-fallback--fullscreen">
-      <div className="error-fallback__content">
-        <span className="error-fallback__icon">🚨</span>
-        <h1 className="error-fallback__title">앱에 문제가 발생했습니다</h1>
-        <p className="error-fallback__message">
+    <div className="error-fallback error-fallback--root error-fallback--fullscreen" data-testid="error-root-container">
+      <div className="error-fallback__content" data-testid="error-root-content">
+        <span className="error-fallback__icon" data-testid="error-root-icon">🚨</span>
+        <h1 className="error-fallback__title" data-testid="error-root-title">앱에 문제가 발생했습니다</h1>
+        <p className="error-fallback__message" data-testid="error-root-message">
           {errorMessage}
         </p>
-        <div className="error-fallback__actions">
-          <button className="error-fallback__button" onClick={onReset}>
+        <div className="error-fallback__actions" data-testid="error-root-actions">
+          <button className="error-fallback__button" data-testid="error-root-retry-btn" onClick={onReset}>
             다시 시도
           </button>
           <button
             className="error-fallback__button error-fallback__button--secondary"
+            data-testid="error-root-refresh-btn"
             onClick={() => window.location.reload()}
           >
             페이지 새로고침
