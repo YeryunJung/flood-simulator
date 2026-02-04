@@ -40,7 +40,7 @@ export function useNaverMap(options: UseNaverMapOptions = {}): UseNaverMapReturn
     try {
       mapInstance.destroy()
     } catch (err) {
-      if (import.meta.env.DEV) {
+      if (process.env.NODE_ENV === 'development') {
         console.warn('naver map destroy failed', err)
       }
     }
