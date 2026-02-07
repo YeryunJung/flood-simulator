@@ -43,11 +43,38 @@
   border: 1px solid #ffccc7;
 }
 
+.flood-map-error__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.flood-map-error__icon {
+  font-size: 40px;
+}
+
 .flood-map-error p {
   color: #cf1322;
   font-size: 14px;
   text-align: center;
-  padding: 20px;
+  margin: 0;
+}
+
+.flood-map-error__retry {
+  padding: 8px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  background-color: #2563eb;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.flood-map-error__retry:hover {
+  background-color: #1d4ed8;
 }
 
 .flood-map-info {

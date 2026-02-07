@@ -3,6 +3,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useNaverMap } from '../../hooks/useNaverMap'
 import { useFloodClusters } from '../../hooks/useFloodClusters'
 import { floodQueryOptions } from '../../api/flood'
+import { isNetworkError, getUserFriendlyMessage } from '../../api/errors'
 import { getFloodLegend } from '../../utils/floodDepthPolicy'
 import { DataLoadingSkeleton } from './FloodMapSkeleton'
 import usePeriodStore from '../../stores/period'
@@ -11,7 +12,8 @@ import './FloodMap.css'
 interface FloodMapProps {
   className?: string
   enableClustering?: boolean
-  showControls?: boolean // 내부 컨트롤 표시 여부
+  showControls?: boolean
+  onRetry?: () => void
 }
 
 const SEOUL_CENTER = { lat: 37.5512, lng: 126.9882 } // 서울 남산 중심
@@ -22,9 +24,10 @@ export function FloodMap({
                            className = '',
                            enableClustering = true,
                            showControls = false,
-                         }: FloodMapProps) {
+  onRetry,
+}: FloodMapProps) {
   const { period, setPeriod } = usePeriodStore()
-  const deferredPeriod = useDeferredValue(period)
+  const deferredPeriod = useDeferredValue(period) // 기간 입력 변경 시 요청/깜빡임 완화
   const [clusteringEnabled, setClusteringEnabled] = useState(enableClustering)
   const legend = useMemo(() => getFloodLegend(), [])
 
@@ -36,17 +39,41 @@ export function FloodMap({
     ...floodQueryOptions(deferredPeriod),
     placeholderData: keepPreviousData
   })
+
+  if (import.meta.env.DEV) {
+    const params = new URLSearchParams(window.location.search)
+    if (params.has('floodMapRenderError')) {
+      throw new Error('DEV_FLOODMAP_RENDER_ERROR')
+    }
+  }
+  const polygons = floodData?.polygons ?? []
   const { currentZoom, isClustered, clusterCount } = useFloodClusters({
     map,
-    polygons: floodData?.polygons ?? [],
+    polygons,
     clusterZoomThreshold: clusteringEnabled ? 11 : 0,
   })
 
-  const error = mapError || dataError?.message
+  const error = mapError || dataError
   if (error) {
+    const isNetwork = dataError ? isNetworkError(dataError) : false
+    const isDev = import.meta.env.DEV
+    const errorMessage = isDev
+      ? (typeof error === 'string' ? error : getUserFriendlyMessage(error, true))
+      : (dataError
+        ? getUserFriendlyMessage(error instanceof Error ? error : new Error(String(error)), false)
+        : '지도를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')
+
     return (
         <div className={`flood-map-container flood-map-error ${className}`} data-testid="floodmap-error-container">
-          <p data-testid="floodmap-error-message">{error}</p>
+          <div className="flood-map-error__content">
+            <span className="flood-map-error__icon">{isNetwork ? '📡' : '⚠️'}</span>
+            <p data-testid="floodmap-error-message">{errorMessage}</p>
+            {isNetwork && onRetry && (
+              <button className="flood-map-error__retry" data-testid="floodmap-retry-btn" onClick={onRetry}>
+                다시 시도
+              </button>
+            )}
+          </div>
         </div>
     )
   }
@@ -114,7 +141,7 @@ export function FloodMap({
             </div>
         )}
 
-        {floodData && floodData.polygons.length > 0 && mapLoaded && !dataLoading && (
+        {floodData && polygons.length > 0 && mapLoaded && !dataLoading && (
             <div className="flood-map-info">
               <span>{floodData.metadata.title}</span>
               <span className="flood-map-info-count">
@@ -123,7 +150,7 @@ export function FloodMap({
             </div>
         )}
 
-        {floodData && floodData.polygons.length === 0 && mapLoaded && !dataLoading && (
+        {floodData && polygons.length === 0 && mapLoaded && !dataLoading && (
             <div className="flood-map-empty">
               <span>{period.year}년 {period.month}월에는 침수 데이터가 없습니다</span>
             </div>
