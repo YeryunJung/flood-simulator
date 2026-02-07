@@ -89,6 +89,15 @@ export function useNaverMap(options: UseNaverMapOptions = {}): UseNaverMapReturn
 
   // 스크립트 로딩 및 지도 초기화
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      const params = new URLSearchParams(window.location.search)
+      if (params.has('mapError')) {
+        setError('DEV_MAP_ERROR')
+        setIsLoaded(false)
+        return
+      }
+    }
+
     setError(null)
 
     const clientId = env.NAVER_MAPS_CLIENT_ID
