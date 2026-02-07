@@ -1,10 +1,9 @@
 import { Suspense } from 'react'
-import { useSuspenseQuery, useQueryClient } from '@tanstack/react-query'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { floodQueryOptions } from '../../api/flood'
 import { groupByDistrict, type DistrictGroup } from '../../domain/flood'
 import type { MonthlyStatistics } from '../../types/statistics'
 import usePeriodStore from '../../stores/period'
-import { ErrorBoundary } from '../ErrorBoundary'
 
 /**
  * 월별 통계 계산 (DistrictGroup 기반)
@@ -114,18 +113,9 @@ export function MonthlySummary() {
 }
 
 export default function MonthlySummaryLoader() {
-  const queryClient = useQueryClient()
-  const period = usePeriodStore((store) => store.period)
-
   return (
-    <ErrorBoundary
-      level="widget"
-      resetKeys={[period.year, period.month]}
-      onReset={() => queryClient.invalidateQueries()}
-    >
-      <Suspense fallback={<Skeleton />}>
-        <MonthlySummary />
-      </Suspense>
-    </ErrorBoundary>
+    <Suspense fallback={<Skeleton />}>
+      <MonthlySummary />
+    </Suspense>
   )
 }

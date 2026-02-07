@@ -1,10 +1,9 @@
 import { Suspense } from 'react'
-import { useSuspenseQuery, useQueryClient } from '@tanstack/react-query'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { floodQueryOptions } from '../../api/flood'
 import { calculateDistrictStatistics, groupByDistrict, RISK_CONFIG } from '../../domain/flood'
 import type { DistrictStatistics, RiskLevel } from '../../types/statistics'
 import usePeriodStore from '../../stores/period'
-import { ErrorBoundary } from '../ErrorBoundary'
 
 function RiskBadge({ level }: { level: RiskLevel }) {
   const config = RISK_CONFIG[level]
@@ -84,18 +83,9 @@ function Skeleton() {
 }
 
 export default function DistrictListLoader() {
-  const queryClient = useQueryClient()
-  const period = usePeriodStore((store) => store.period)
-
   return (
-    <ErrorBoundary
-      level="widget"
-      resetKeys={[period.year, period.month]}
-      onReset={() => queryClient.invalidateQueries()}
-    >
-      <Suspense fallback={<Skeleton />}>
-        <DistrictList />
-      </Suspense>
-    </ErrorBoundary>
+    <Suspense fallback={<Skeleton />}>
+      <DistrictList />
+    </Suspense>
   )
 }

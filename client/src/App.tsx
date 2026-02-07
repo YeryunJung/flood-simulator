@@ -5,11 +5,31 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import usePeriodStore from './stores/period'
 import './App.css'
 
-function App() {
-  const { period, setPeriod } = usePeriodStore()
+function StatisticsPanelFallback({ onRetry }: { onRetry: () => void }) {
+  return (
+    <aside className='statistics-panel' data-testid="statistics-panel-fallback">
+      <div className='statistics-panel__unavailable'>
+        데이터를 불러올 수 없습니다
+        <button className="statistics-panel__retry" onClick={onRetry}>
+          다시 시도
+        </button>
+      </div>
+    </aside>
+  )
+}
 
+function App() {
+  if (import.meta.env.DEV) {
+    const params = new URLSearchParams(window.location.search)
+    if (params.has('rootError')) {
+      throw new Error('DEV_ROOT_ERROR')
+    }
+  }
+
+  const { period, setPeriod } = usePeriodStore()
   const queryClient = useQueryClient()
-  const handleReset = () => {
+
+  const handleRetry = () => {
     queryClient.invalidateQueries()
   }
 
@@ -37,11 +57,22 @@ function App() {
       </header>
       <div className='app__content'>
         <main className='app__map'>
-          <ErrorBoundary level="widget" onReset={handleReset}>
-            <FloodMap />
+          <ErrorBoundary level="widget" onReset={handleRetry}>
+            <FloodMap onRetry={handleRetry} />
           </ErrorBoundary>
         </main>
-        <ErrorBoundary level="widget" onReset={handleReset}>
+        <ErrorBoundary
+          level="widget"
+          resetKeys={[period.year, period.month]}
+          fallback={({ reset }) => (
+            <StatisticsPanelFallback
+              onRetry={() => {
+                reset()
+                handleRetry()
+              }}
+            />
+          )}
+        >
           <StatisticsPanel />
         </ErrorBoundary>
       </div>
