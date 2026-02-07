@@ -9,6 +9,31 @@
   overflow: hidden;
 }
 
+.statistics-panel__unavailable {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.statistics-panel__retry {
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+}
+
+.statistics-panel__retry:hover {
+  background: #f3f4f6;
+}
+
 /* Monthly Summary */
 .monthly-summary {
   flex-shrink: 0;
@@ -65,8 +90,13 @@
 }
 
 .empty-list {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 14px;
   color: gray;
+  text-align: center;
 }
 
 /* Skeleton */

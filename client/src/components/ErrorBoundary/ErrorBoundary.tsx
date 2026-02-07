@@ -117,7 +117,7 @@ function ErrorFallback({ error, onReset, level }: ErrorFallbackProps) {
 // 앱 전체 에러 화면
 export function RootErrorFallback({ error, onReset }: { error: Error | null; onReset: () => void }) {
   const errorMessage = error
-    ? getUserFriendlyMessage(error, import.meta.env.DEV)
+    ? getUserFriendlyMessage(error, false)
     : '예상치 못한 오류가 발생했습니다'
 
   return (
@@ -128,16 +128,28 @@ export function RootErrorFallback({ error, onReset }: { error: Error | null; onR
         <p className="error-fallback__message" data-testid="error-root-message">
           {errorMessage}
         </p>
+        <p className="error-fallback__message">
+          문제가 계속되면 관리자에게 문의해주세요.
+        </p>
+        {import.meta.env.DEV && error && (
+          <p className="error-fallback__message">
+            {error.message}
+          </p>
+        )}
         <div className="error-fallback__actions" data-testid="error-root-actions">
-          <button className="error-fallback__button" data-testid="error-root-retry-btn" onClick={onReset}>
-            다시 시도
-          </button>
           <button
-            className="error-fallback__button error-fallback__button--secondary"
+            className="error-fallback__button"
             data-testid="error-root-refresh-btn"
             onClick={() => window.location.reload()}
           >
             페이지 새로고침
+          </button>
+          <button
+            className="error-fallback__button error-fallback__button--secondary"
+            data-testid="error-root-retry-btn"
+            onClick={onReset}
+          >
+            다시 시도
           </button>
         </div>
       </div>
