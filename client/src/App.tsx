@@ -7,10 +7,10 @@ import './App.css'
 
 function StatisticsPanelFallback({ onRetry }: { onRetry: () => void }) {
   return (
-    <aside className='statistics-panel' data-testid="statistics-panel-fallback">
-      <div className='statistics-panel__unavailable'>
+    <aside className='statistics-panel' data-testid="stats-fallback-container">
+      <div className='statistics-panel__unavailable' data-testid="stats-fallback-message">
         데이터를 불러올 수 없습니다
-        <button className="statistics-panel__retry" onClick={onRetry}>
+        <button className="statistics-panel__retry" data-testid="stats-fallback-retry-btn" onClick={onRetry}>
           다시 시도
         </button>
       </div>
@@ -34,7 +34,7 @@ function App() {
   }
 
   return (
-    <div className='app'>
+    <div className='app' data-testid="app-container">
       <header className='app__header'>
         <form className='period-form'>
           <input

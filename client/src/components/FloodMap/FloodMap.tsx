@@ -66,10 +66,10 @@ export function FloodMap({
     return (
         <div className={`flood-map-container flood-map-error ${className}`} data-testid="floodmap-error-container">
           <div className="flood-map-error__content">
-            <span className="flood-map-error__icon">{isNetwork ? '📡' : '⚠️'}</span>
+            <span className="flood-map-error__icon" data-testid="floodmap-error-icon">{isNetwork ? '📡' : '⚠️'}</span>
             <p data-testid="floodmap-error-message">{errorMessage}</p>
             {isNetwork && onRetry && (
-              <button className="flood-map-error__retry" data-testid="floodmap-retry-btn" onClick={onRetry}>
+              <button className="flood-map-error__retry" data-testid="floodmap-error-retry-btn" onClick={onRetry}>
                 다시 시도
               </button>
             )}
@@ -79,7 +79,7 @@ export function FloodMap({
   }
 
   return (
-      <div className={`flood-map-container ${className}`}>
+      <div className={`flood-map-container ${className}`} data-testid="floodmap-container">
         {!mapLoaded && (
             <div className="flood-map-loading">
               <span>지도 로딩 중...</span>

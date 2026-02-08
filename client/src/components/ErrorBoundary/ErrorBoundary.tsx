@@ -132,7 +132,7 @@ export function RootErrorFallback({ error, onReset }: { error: Error | null; onR
           문제가 계속되면 관리자에게 문의해주세요.
         </p>
         {import.meta.env.DEV && error && (
-          <p className="error-fallback__message">
+          <p className="error-fallback__message" data-testid="error-root-dev-message">
             {error.message}
           </p>
         )}
