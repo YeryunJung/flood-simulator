@@ -11,7 +11,7 @@ export function StatisticsPanel() {
   }
 
   return (
-    <aside className='statistics-panel'>
+    <aside className='statistics-panel' data-testid="stats-panel-container">
       <MonthlySummary />
       <DistrictList />
     </aside>
