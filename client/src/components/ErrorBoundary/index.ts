@@ -1,1 +1,1 @@
-export { ErrorBoundary, RootErrorFallback } from './ErrorBoundary'
+export { ErrorBoundary, ErrorFallback, RootErrorFallback } from './ErrorBoundary'

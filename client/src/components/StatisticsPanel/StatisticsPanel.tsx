@@ -5,7 +5,7 @@ import './styles.css'
 export function StatisticsPanel() {
   if (import.meta.env.DEV) {
     const params = new URLSearchParams(window.location.search)
-    if (params.has('statsError')) {
+    if (params.has('__dev_statsError')) {
       throw new Error('DEV_STATS_ERROR')
     }
   }

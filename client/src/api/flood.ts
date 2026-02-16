@@ -30,22 +30,22 @@ async function fetchFloodData(period: Period): Promise<FloodData> {
     polygons: [],
   }
 
-  // DEV 전용: ?networkError, ?apiError=403, ?parseError, ?emptyData 쿼리 파라미터로 에러 시뮬레이션
+  // DEV 전용: ?__dev_networkError, ?__dev_apiError=403, ?__dev_parseError, ?__dev_emptyData 쿼리 파라미터로 에러 시뮬레이션
   if (import.meta.env.DEV) {
     const params = new URLSearchParams(window.location.search)
-    if (params.has('networkError')) {
+    if (params.has('__dev_networkError')) {
       throw new NetworkError()
     }
-    if (params.has('apiError')) {
-      const statusParam = params.get('apiError')
+    if (params.has('__dev_apiError')) {
+      const statusParam = params.get('__dev_apiError')
       const status = statusParam ? Number(statusParam) : 500
       const safeStatus = Number.isFinite(status) ? status : 500
       throw new ApiError(safeStatus, 'DEV_API_ERROR', `서버 오류: ${safeStatus}`)
     }
-    if (params.has('parseError')) {
+    if (params.has('__dev_parseError')) {
       throw new Error('서버 응답을 파싱할 수 없습니다')
     }
-    if (params.has('emptyData')) {
+    if (params.has('__dev_emptyData')) {
       return emptyData
     }
   }

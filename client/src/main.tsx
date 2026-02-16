@@ -12,14 +12,8 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary
       level="root"
-      fallback={({ error, reset }) => (
-        <RootErrorFallback
-          error={error}
-          onReset={() => {
-            queryClient.clear()
-            reset()
-          }}
-        />
+      fallback={({ error }) => (
+        <RootErrorFallback error={error} />
       )}
     >
       <QueryClientProvider client={queryClient}>

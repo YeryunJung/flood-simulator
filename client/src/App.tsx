@@ -1,7 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { StatisticsPanel } from './components/StatisticsPanel/StatisticsPanel'
 import { FloodMap } from './components/FloodMap/FloodMap'
-import { ErrorBoundary } from './components/ErrorBoundary'
+import { ErrorBoundary, ErrorFallback } from './components/ErrorBoundary'
+import { isRetryable } from './api/errors'
 import usePeriodStore from './stores/period'
 import './App.css'
 
@@ -21,7 +22,7 @@ function StatisticsPanelFallback({ onRetry }: { onRetry: () => void }) {
 function App() {
   if (import.meta.env.DEV) {
     const params = new URLSearchParams(window.location.search)
-    if (params.has('rootError')) {
+    if (params.has('__dev_rootError')) {
       throw new Error('DEV_ROOT_ERROR')
     }
   }
@@ -57,18 +58,31 @@ function App() {
       </header>
       <div className='app__content'>
         <main className='app__map'>
-          <ErrorBoundary level="widget" onReset={handleRetry}>
+          <ErrorBoundary
+            level="widget"
+            fallback={({ error, reset }) => {
+              const retry = () => {
+                if (isRetryable(error)) {
+                  queryClient.invalidateQueries()
+                }
+                reset()
+              }
+              return <ErrorFallback error={error} onReset={retry} level="widget" />
+            }}
+          >
             <FloodMap onRetry={handleRetry} />
           </ErrorBoundary>
         </main>
         <ErrorBoundary
           level="widget"
           resetKeys={[period.year, period.month]}
-          fallback={({ reset }) => (
+          fallback={({ error, reset }) => (
             <StatisticsPanelFallback
               onRetry={() => {
+                if (isRetryable(error)) {
+                  queryClient.invalidateQueries()
+                }
                 reset()
-                handleRetry()
               }}
             />
           )}

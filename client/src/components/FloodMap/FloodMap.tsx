@@ -3,7 +3,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useNaverMap } from '../../hooks/useNaverMap'
 import { useFloodClusters } from '../../hooks/useFloodClusters'
 import { floodQueryOptions } from '../../api/flood'
-import { isNetworkError, getUserFriendlyMessage } from '../../api/errors'
+import { isNetworkError, isRetryable, getUserFriendlyMessage } from '../../api/errors'
 import { getFloodLegend } from '../../utils/floodDepthPolicy'
 import { DataLoadingSkeleton } from './FloodMapSkeleton'
 import usePeriodStore from '../../stores/period'
@@ -42,7 +42,7 @@ export function FloodMap({
 
   if (import.meta.env.DEV) {
     const params = new URLSearchParams(window.location.search)
-    if (params.has('floodMapRenderError')) {
+    if (params.has('__dev_floodMapRenderError')) {
       throw new Error('DEV_FLOODMAP_RENDER_ERROR')
     }
   }
@@ -56,11 +56,12 @@ export function FloodMap({
   const error = mapError || dataError
   if (error) {
     const isNetwork = dataError ? isNetworkError(dataError) : false
+    const canRetry = dataError ? isRetryable(dataError) : false
     const isDev = import.meta.env.DEV
     const errorMessage = isDev
-      ? (typeof error === 'string' ? error : getUserFriendlyMessage(error, true))
+      ? getUserFriendlyMessage(error, true)
       : (dataError
-        ? getUserFriendlyMessage(error instanceof Error ? error : new Error(String(error)), false)
+        ? getUserFriendlyMessage(dataError, false)
         : '지도를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')
 
     return (
@@ -68,7 +69,7 @@ export function FloodMap({
           <div className="flood-map-error__content">
             <span className="flood-map-error__icon" data-testid="floodmap-error-icon">{isNetwork ? '📡' : '⚠️'}</span>
             <p data-testid="floodmap-error-message">{errorMessage}</p>
-            {isNetwork && onRetry && (
+            {canRetry && onRetry && (
               <button className="flood-map-error__retry" data-testid="floodmap-error-retry-btn" onClick={onRetry}>
                 다시 시도
               </button>

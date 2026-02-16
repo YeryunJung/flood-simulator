@@ -8,7 +8,7 @@ interface ErrorBoundaryProps {
   children: ReactNode
   fallback?: ReactNode | FallbackRender
   onReset?: () => void
-  level?: 'root' | 'page' | 'widget'
+  level?: 'root' | 'widget'
   resetKeys?: unknown[]
 }
 
@@ -91,10 +91,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 interface ErrorFallbackProps {
   error: Error
   onReset: () => void
-  level: 'root' | 'page' | 'widget'
+  level: 'root' | 'widget'
 }
 
-function ErrorFallback({ error, onReset, level }: ErrorFallbackProps) {
+export function ErrorFallback({ error, onReset, level }: ErrorFallbackProps) {
   const isNetwork = isNetworkError(error)
   const errorMessage = getUserFriendlyMessage(error, import.meta.env.DEV)
 
@@ -115,7 +115,7 @@ function ErrorFallback({ error, onReset, level }: ErrorFallbackProps) {
 }
 
 // 앱 전체 에러 화면
-export function RootErrorFallback({ error, onReset }: { error: Error | null; onReset: () => void }) {
+export function RootErrorFallback({ error }: { error: Error | null }) {
   const errorMessage = error
     ? getUserFriendlyMessage(error, false)
     : '예상치 못한 오류가 발생했습니다'
@@ -143,13 +143,6 @@ export function RootErrorFallback({ error, onReset }: { error: Error | null; onR
             onClick={() => window.location.reload()}
           >
             페이지 새로고침
-          </button>
-          <button
-            className="error-fallback__button error-fallback__button--secondary"
-            data-testid="error-root-retry-btn"
-            onClick={onReset}
-          >
-            다시 시도
           </button>
         </div>
       </div>

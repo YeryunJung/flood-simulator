@@ -62,6 +62,13 @@ export function normalizeError(error: unknown): Error {
   return new Error('알 수 없는 오류가 발생했습니다')
 }
 
+// 사용자가 재시도해서 복구될 가능성이 있는 에러인지 판별
+export function isRetryable(error: unknown): boolean {
+  if (isNetworkError(error)) return true
+  if (isApiError(error)) return error.isServerError || error.status === 429
+  return false
+}
+
 // 사용자에게 안전한 에러 메시지 반환 (민감정보 필터링)
 export function getUserFriendlyMessage(error: Error, isDevelopment = false): string {
   if (isDevelopment) {
