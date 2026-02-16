@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: flood-data-api
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production

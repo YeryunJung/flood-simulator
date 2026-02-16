@@ -52,8 +52,10 @@ async function fetchFloodData(period: Period): Promise<FloodData> {
 
   let res: Response
   try {
-    const url = `${env.API_END_POINT}/monthly-flood-data/flood_data_${year}_${monthStr}.json`
-    res = await fetch(url)
+    const params = new URLSearchParams()
+    params.set('year', year.toString())
+    params.set('month', monthStr)
+    res = await fetch(`${env.API_END_POINT}/flood-data?${params.toString()}`)
   } catch { // fetch 실패 = 네트워크 단절 또는 서버 다운
     throw new NetworkError()
   }

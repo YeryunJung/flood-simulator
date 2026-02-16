@@ -1,4 +1,4 @@
-import { Suspense } from 'react'
+import { memo, Suspense, useDeferredValue, useMemo } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { floodQueryOptions } from '../../api/flood'
 import { calculateDistrictStatistics, groupByDistrict, RISK_CONFIG } from '../../domain/flood'
@@ -10,7 +10,7 @@ function RiskBadge({ level }: { level: RiskLevel }) {
   return <span className={`risk-badge risk-badge--${config.color}`}>{config.label}</span>
 }
 
-function DistrictCard({ district }: { district: DistrictStatistics }) {
+const DistrictCard = memo(function DistrictCard({ district }: { district: DistrictStatistics }) {
   const density = district.area > 0 ? (district.floodPointCount / district.area).toFixed(4) : '0'
 
   return (
@@ -27,18 +27,33 @@ function DistrictCard({ district }: { district: DistrictStatistics }) {
       </div>
     </li>
   )
-}
+})
 
 export function DistrictList() {
   const period = usePeriodStore((store) => store.period)
-  const { data } = useSuspenseQuery({
-    ...floodQueryOptions(period),
-    select: groupByDistrict
+  const deferredPeriod = useDeferredValue(period)
+
+  const { data: rawData } = useSuspenseQuery({
+    ...floodQueryOptions(deferredPeriod),
   })
-  const districts = calculateDistrictStatistics(data)
+
+  // 서버 상태 변경 시 데이터 포맷 함수 호출 
+  const data = useMemo(() => {
+    return groupByDistrict(rawData)
+  }, [rawData])
+
+  const districts = useMemo(() => calculateDistrictStatistics(data), [data])
+
+  const isPending = period !== deferredPeriod
 
   return (
-    <section className='district-list'>
+    <section
+      className='district-list'
+      style={{
+        opacity: isPending ? 0.5 : 1,
+        transition: 'opacity 0.2s ease-in-out'
+      }}
+    >
       <h2 className='district-list__title'>자치구별 현황</h2>
       {districts.length ? (
         <ul className='district-list__items'>
@@ -50,6 +65,14 @@ export function DistrictList() {
         <span className='empty-list'>표시할 데이터가 없어요</span>
       )}
     </section>
+  )
+}
+
+export default function DistrictListLoader() {
+  return (
+    <Suspense fallback={<Skeleton />}>
+      <DistrictList />
+    </Suspense>
   )
 }
 
@@ -79,13 +102,5 @@ function Skeleton() {
         ))}
       </ul>
     </section>
-  )
-}
-
-export default function DistrictListLoader() {
-  return (
-    <Suspense fallback={<Skeleton />}>
-      <DistrictList />
-    </Suspense>
   )
 }
