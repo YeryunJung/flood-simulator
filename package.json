@@ -2,6 +2,7 @@
   "name": "flood-simulator",
   "private": true,
   "scripts": {
+    "postinstall": "npx playwright install chromium",
     "test:e2e": "npx playwright test",
     "test:e2e:ui": "npx playwright test --ui",
     "test:e2e:headed": "npx playwright test --headed"
