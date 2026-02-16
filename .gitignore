@@ -146,6 +146,9 @@ vite.config.ts.timestamp-*
 /test-results/
 /playwright-report/
 
+# Claude Code
+.claude/agents/
+
 # MCP
 .mcp.json
 .playwright-mcp/
