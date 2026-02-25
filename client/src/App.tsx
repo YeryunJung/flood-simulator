@@ -1,3 +1,5 @@
+'use client'
+
 import { StatisticsPanel } from './components/StatisticsPanel/StatisticsPanel'
 import { FloodMap } from './components/FloodMap/FloodMap'
 import usePeriodStore from './stores/period'
