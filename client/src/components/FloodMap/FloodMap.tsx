@@ -3,7 +3,6 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useNaverMap } from '../../hooks/useNaverMap'
 import { useFloodClusters } from '../../hooks/useFloodClusters'
 import { floodQueryOptions } from '../../api/flood'
-import { isNetworkError, isRetryable, getUserFriendlyMessage } from '../../api/errors'
 import { getFloodLegend } from '../../utils/floodDepthPolicy'
 import { DataLoadingSkeleton } from './FloodMapSkeleton'
 import usePeriodStore from '../../stores/period'
@@ -13,7 +12,6 @@ interface FloodMapProps {
   className?: string
   enableClustering?: boolean
   showControls?: boolean
-  onRetry?: () => void
 }
 
 const SEOUL_CENTER = { lat: 37.5512, lng: 126.9882 } // 서울 남산 중심
@@ -24,7 +22,6 @@ export function FloodMap({
                            className = '',
                            enableClustering = true,
                            showControls = false,
-  onRetry,
 }: FloodMapProps) {
   const { period, setPeriod } = usePeriodStore()
   const deferredPeriod = useDeferredValue(period) // 기간 입력 변경 시 요청/깜빡임 완화
@@ -35,7 +32,7 @@ export function FloodMap({
     center: SEOUL_CENTER,
     zoom: 13,
   })
-  const { data: floodData, isLoading: dataLoading, error: dataError } = useQuery({
+  const { data: floodData, isLoading: dataLoading } = useQuery({
     ...floodQueryOptions(deferredPeriod),
     placeholderData: keepPreviousData
   })
@@ -53,27 +50,17 @@ export function FloodMap({
     clusterZoomThreshold: clusteringEnabled ? 11 : 0,
   })
 
-  const error = mapError || dataError
-  if (error) {
-    const isNetwork = dataError ? isNetworkError(dataError) : false
-    const canRetry = dataError ? isRetryable(dataError) : false
-    const isDev = import.meta.env.DEV
-    const errorMessage = isDev
-      ? getUserFriendlyMessage(error, true)
-      : (dataError
-        ? getUserFriendlyMessage(dataError, false)
-        : '지도를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')
+  // 네이버 지도 에러만 내부에서 처리
+  if (mapError) {
+    const errorMessage = import.meta.env.DEV
+      ? mapError.message
+      : '지도를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.'
 
     return (
         <div className={`flood-map-container flood-map-error ${className}`} data-testid="floodmap-error-container">
           <div className="flood-map-error__content">
-            <span className="flood-map-error__icon" data-testid="floodmap-error-icon">{isNetwork ? '📡' : '⚠️'}</span>
+            <span className="flood-map-error__icon" data-testid="floodmap-error-icon">⚠️</span>
             <p data-testid="floodmap-error-message">{errorMessage}</p>
-            {canRetry && onRetry && (
-              <button className="flood-map-error__retry" data-testid="floodmap-error-retry-btn" onClick={onRetry}>
-                다시 시도
-              </button>
-            )}
           </div>
         </div>
     )
