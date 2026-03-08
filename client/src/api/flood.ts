@@ -43,7 +43,7 @@ async function fetchFloodData(period: Period): Promise<FloodData> {
       throw new ApiError(safeStatus, 'DEV_API_ERROR', `서버 오류: ${safeStatus}`)
     }
     if (params.has('__dev_parseError')) {
-      throw new Error('서버 응답을 파싱할 수 없습니다')
+      throw new ApiError(502, 'PARSE_ERROR', '서버 응답을 파싱할 수 없습니다')
     }
     if (params.has('__dev_emptyData')) {
       return emptyData
@@ -60,9 +60,18 @@ async function fetchFloodData(period: Period): Promise<FloodData> {
     throw new NetworkError()
   }
 
-  // 404/204는 해당 기간에 데이터가 없는 것이므로 에러가 아닌 빈 데이터로 처리
-  if (res.status === 404 || res.status === 204) {
+  if (res.status === 204) {
     return emptyData
+  }
+
+  if (res.status === 404) {
+    const body = await res.json().catch(() => null)
+    if (body?.error?.code === 'DATA_NOT_FOUND') {
+      return emptyData
+    }
+    const code = body?.error?.code ?? 'NOT_FOUND'
+    const message = body?.error?.message ?? '요청을 처리할 수 없습니다'
+    throw new ApiError(404, code, message)
   }
 
   if (!res.ok) {
@@ -83,6 +92,6 @@ async function fetchFloodData(period: Period): Promise<FloodData> {
     }
     return data as FloodData
   } catch {
-    throw new Error('서버 응답을 파싱할 수 없습니다')
+    throw new ApiError(502, 'PARSE_ERROR', '서버 응답을 파싱할 수 없습니다')
   }
 }

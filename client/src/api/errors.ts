@@ -62,6 +62,11 @@ export function normalizeError(error: unknown): Error {
   return new Error('알 수 없는 오류가 발생했습니다')
 }
 
+// 서버 API 에러인지 판별 (NetworkError | ApiError)
+export function isServerApiError(error: unknown): error is NetworkError | ApiError {
+  return isNetworkError(error) || isApiError(error)
+}
+
 // 사용자가 재시도해서 복구될 가능성이 있는 에러인지 판별
 export function isRetryable(error: unknown): boolean {
   if (isNetworkError(error)) return true
