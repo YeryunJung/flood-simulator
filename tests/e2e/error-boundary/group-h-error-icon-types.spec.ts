@@ -1,7 +1,7 @@
 import { test, expect, ERROR_VISIBLE_TIMEOUT } from './fixtures';
 
 test.describe('에러 타입별 아이콘', () => {
-  // [P1] 7.1 — 6개 에러별 올바른 아이콘 표시
+  // [P1] 7.1 — 각 에러별 올바른 아이콘 표시
   test('각 에러 타입에 맞는 아이콘이 표시된다', async ({ page }) => {
     // L1 루트 에러 → 🚨
     await page.goto('/?__dev_rootError');
@@ -11,17 +11,17 @@ test.describe('에러 타입별 아이콘', () => {
     await page.goto('/?__dev_floodMapRenderError');
     await expect(page.getByTestId('error-fallback-icon')).toContainText('⚠️');
 
-    // L3 네트워크 에러 → 📡
+    // L3 네트워크 에러 → 📡 (공용 오버레이)
     await page.goto('/?__dev_networkError');
-    await expect(page.getByTestId('floodmap-error-icon')).toBeVisible({ timeout: ERROR_VISIBLE_TIMEOUT });
-    await expect(page.getByTestId('floodmap-error-icon')).toContainText('📡');
+    await expect(page.getByTestId('api-error-overlay-icon')).toBeVisible({ timeout: ERROR_VISIBLE_TIMEOUT });
+    await expect(page.getByTestId('api-error-overlay-icon')).toContainText('📡');
 
-    // L3 API 403 에러 → ⚠️
+    // L3 API 403 에러 → ⚠️ (공용 오버레이)
     await page.goto('/?__dev_apiError=403');
-    await expect(page.getByTestId('floodmap-error-icon')).toBeVisible({ timeout: ERROR_VISIBLE_TIMEOUT });
-    await expect(page.getByTestId('floodmap-error-icon')).toContainText('⚠️');
+    await expect(page.getByTestId('api-error-overlay-icon')).toBeVisible({ timeout: ERROR_VISIBLE_TIMEOUT });
+    await expect(page.getByTestId('api-error-overlay-icon')).toContainText('⚠️');
 
-    // L3 맵 초기화 에러 → ⚠️
+    // L3 맵 초기화 에러 → ⚠️ (FloodMap 내부)
     await page.goto('/?__dev_mapError');
     await expect(page.getByTestId('floodmap-error-icon')).toContainText('⚠️');
 

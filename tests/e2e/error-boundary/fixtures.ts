@@ -5,7 +5,7 @@ import { test as base, type Page } from '@playwright/test';
 /** React Query 재시도 고려한 타임아웃 */
 export const ERROR_VISIBLE_TIMEOUT = 15_000;
 
-const FLOOD_API_PATTERN = '**/monthly-flood-data/**';
+const FLOOD_API_PATTERN = '**/api/flood-data**';
 
 const VALID_FLOOD_DATA = {
   metadata: {
