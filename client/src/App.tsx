@@ -32,7 +32,7 @@ function StatisticsPanelFallback({ error, onRetry }: { error: Error; onRetry: ()
 }
 
 function App() {
-  if (import.meta.env.DEV) {
+  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search)
     if (params.has('__dev_rootError')) {
       throw new Error('DEV_ROOT_ERROR')

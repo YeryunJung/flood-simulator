@@ -30,8 +30,13 @@ async function fetchFloodData(period: Period): Promise<FloodData> {
     polygons: [],
   }
 
+  // TODO(SSR-001): 서버에서도 실제 데이터를 페치하도록 전환 필요
+  if (typeof window === 'undefined') {
+    return emptyData
+  }
+
   // DEV 전용: ?__dev_networkError, ?__dev_apiError=403, ?__dev_parseError, ?__dev_emptyData 쿼리 파라미터로 에러 시뮬레이션
-  if (import.meta.env.DEV) {
+  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search)
     if (params.has('__dev_networkError')) {
       throw new NetworkError()
@@ -55,7 +60,7 @@ async function fetchFloodData(period: Period): Promise<FloodData> {
     const params = new URLSearchParams()
     params.set('year', year.toString())
     params.set('month', monthStr)
-    res = await fetch(`${env.API_END_POINT}/flood-data?${params.toString()}`)
+    res = await fetch(`${env.API_END_POINT}/api/flood-data?${params.toString()}`)
   } catch { // fetch 실패 = 네트워크 단절 또는 서버 다운
     throw new NetworkError()
   }

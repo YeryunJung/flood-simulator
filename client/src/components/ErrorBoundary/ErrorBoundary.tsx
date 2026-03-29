@@ -96,7 +96,7 @@ interface ErrorFallbackProps {
 
 export function ErrorFallback({ error, onReset, level }: ErrorFallbackProps) {
   const isNetwork = isNetworkError(error)
-  const errorMessage = getUserFriendlyMessage(error, import.meta.env.DEV)
+  const errorMessage = getUserFriendlyMessage(error, process.env.NODE_ENV === 'development')
 
   return (
     <div className={`error-fallback error-fallback--${level}`} data-testid="error-fallback-container">
@@ -131,7 +131,7 @@ export function RootErrorFallback({ error }: { error: Error | null }) {
         <p className="error-fallback__message">
           문제가 계속되면 관리자에게 문의해주세요.
         </p>
-        {import.meta.env.DEV && error && (
+        {process.env.NODE_ENV === 'development' && error && (
           <p className="error-fallback__message" data-testid="error-root-dev-message">
             {error.message}
           </p>

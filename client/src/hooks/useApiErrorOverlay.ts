@@ -31,6 +31,6 @@ export function useApiErrorOverlay({ onErrorCleared }: UseApiErrorOverlayOptions
     apiError,
     isNetwork: apiError ? isNetworkError(apiError) : false,
     canRetry: apiError ? isRetryable(apiError) : false,
-    errorMessage: apiError ? getUserFriendlyMessage(apiError, import.meta.env.DEV) : null,
+    errorMessage: apiError ? getUserFriendlyMessage(apiError, process.env.NODE_ENV === 'development') : null,
   }
 }

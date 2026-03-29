@@ -37,7 +37,7 @@ export function FloodMap({
     placeholderData: keepPreviousData
   })
 
-  if (import.meta.env.DEV) {
+  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search)
     if (params.has('__dev_floodMapRenderError')) {
       throw new Error('DEV_FLOODMAP_RENDER_ERROR')
@@ -52,7 +52,7 @@ export function FloodMap({
 
   // 네이버 지도 에러만 내부에서 처리
   if (mapError) {
-    const errorMessage = import.meta.env.DEV
+    const errorMessage = process.env.NODE_ENV === 'development'
       ? mapError.message
       : '지도를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.'
 
