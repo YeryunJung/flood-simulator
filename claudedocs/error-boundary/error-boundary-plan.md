@@ -2,6 +2,8 @@
 
 > 침수 시뮬레이터 앱의 3계층 에러 처리 구조를 설명하는 문서입니다.
 > 이 문서만으로 에러 바운더리 로직 전체를 파악할 수 있습니다.
+>
+> 관련 PR: [#12 에러 바운더리 시스템 구현 및 E2E 테스트](https://github.com/YeryunJung/flood-simulator/pull/12)
 
 ---
 
@@ -9,8 +11,9 @@
 
 ```
 +------------------------------------------------------------------+
+|  page.tsx → dynamic(() => import('@/App'), { ssr: false })       |
 |                                                                  |
-|  L1  Root ErrorBoundary  (main.tsx)                              |
+|  L1  Root ErrorBoundary  (App.tsx 외부, providers.tsx)            |
 |  → RootErrorFallback: 풀스크린 오버레이 + "페이지 새로고침"              |
 |                                                                  |
 |  +----------------------------+  +-----------------------------+ |
@@ -21,21 +24,20 @@
 |  |   "다시 시도" 버튼            |  |   "다시 시도" 버튼              | |
 |  |   retry 시 isRetryable     |  |   retry 시 isRetryable       | |
 |  |   체크 후 쿼리 무효화          |  |   체크 후 쿼리 무효화            | |
-|  |                            |  |   resetKeys=[year, month]   | |
-|  |  +----------------------+  |  |                             | |
-|  |  | L3  FloodMap 내부     |  |  |                             | |
+|  |                            |  |   resetKeys=[year,month,    | |
+|  |  +----------------------+  |  |            retryCount]      | |
+|  |  | L3-B FloodMap 내부   |  |  |                             | |
 |  |  | (ErrorBoundary 아님)  |  |  |                             | |
-|  |  |                      |  |  |                             | |
-|  |  | 네트워크 에러  [R]      |  |  |                             | |
-|  |  | API 5xx 에러 [R]      |  |  |                             | |
-|  |  | API 4xx 에러          |  |  |                             | |
-|  |  | 맵 초기화 에러          |  |  |                             | |
+|  |  | 맵 초기화 에러만 처리    |  |  |                             | |
 |  |  +----------------------+  |  |                             | |
 |  +----------------------------+  +-----------------------------+ |
 |                                                                  |
+|  +------------------------------------------------------------+ |
+|  | L3-A  ApiErrorOverlay (app__content 위 오버레이)              | |
+|  | 서버 API 에러 통합 처리 (NetworkError, ApiError)               | |
+|  | "다시 시도" 1번 → FloodMap + Stats 양쪽 재요청                  | |
+|  +------------------------------------------------------------+ |
 +------------------------------------------------------------------+
-
-[R] = Retry 가능 (isRetryable 판정)
 ```
 
 ---
@@ -77,7 +79,7 @@ function isRetryable(error: unknown): boolean {
 
 | 환경 | 동작 |
 |:---|:---|
-| **DEV** (`import.meta.env.DEV`) | `error.message` 원본 그대로 표시 |
+| **DEV** (`process.env.NODE_ENV === 'development'`) | `error.message` 원본 그대로 표시 |
 | **PROD** | 에러 타입별 안전한 한국어 메시지 반환 (아래 표 참고) |
 
 | 에러 타입 | PROD 메시지 |
@@ -94,19 +96,23 @@ function isRetryable(error: unknown): boolean {
 
 ### L1 루트 — 앱 전체가 죽었을 때
 
-> 소스: `main.tsx` (ErrorBoundary 배치), `ErrorBoundary.tsx` (RootErrorFallback)
+> 소스: `App.tsx` (ErrorBoundary 배치), `ErrorBoundary.tsx` (RootErrorFallback)
+> 진입점: `page.tsx` → `dynamic(() => import('@/App'), { ssr: false })`
 
 React 컴포넌트 트리 최상단에서 에러를 잡는다.
 App 컴포넌트 자체(L2 위젯 ErrorBoundary보다 위)에서 throw되는 에러가 여기 도달한다.
 여기서 에러가 잡히면 **앱 전체가 사라지고** 풀스크린 오버레이만 남는다.
 
-**배치 구조 (main.tsx):**
+> **SSR 참고**: `page.tsx`에서 `ssr: false`로 App을 불러오고 있어 현재 서버 렌더링은 비활성 상태다.
+> TODO(SSR-001)에서 서버 데이터 fetch 구현 후 제거 예정.
+
+**배치 구조 (page.tsx → App.tsx):**
 ```tsx
-<ErrorBoundary level="root" fallback={({ error }) => <RootErrorFallback error={error} />}>
-  <QueryClientProvider client={queryClient}>
-    <App />   ← App에서 throw하면 여기서 잡힘
-  </QueryClientProvider>
-</ErrorBoundary>
+// page.tsx
+const App = dynamic(() => import('@/App'), { ssr: false })
+
+// App.tsx — L1 Root ErrorBoundary는 App 외부의 providers.tsx에서 감싸는 구조
+// App 컴포넌트 내에서 throw하면 RootErrorFallback이 표시됨
 ```
 
 **UI 요소:**
@@ -178,25 +184,46 @@ FloodMap과 StatisticsPanel 각각을 `<ErrorBoundary>`로 감싸고 있다.
 
 - **Fallback UI**: `StatisticsPanelFallback` — 아이콘 없음, "데이터를 불러올 수 없습니다" + "다시 시도" 버튼
 - **"다시 시도" 클릭 시 동작**: FloodMap과 동일한 `isRetryable` 체크 로직
-- **`resetKeys`**: `[period.year, period.month]` — 사용자가 연도/월을 변경하면 에러 상태 자동 초기화
+- **`resetKeys`**: `[period.year, period.month, retryCount]` — 사용자가 연도/월을 변경하거나 ApiErrorOverlay에서 재시도하면 에러 상태 자동 초기화
 - **격리**: FloodMap은 영향 없음
 
 ---
 
-### L3 내부 — ErrorBoundary 없이 컴포넌트가 직접 처리
+### L3-A 서버 API 에러 — ApiErrorOverlay가 전담
 
-> 소스: `FloodMap.tsx` (에러 UI 렌더링), `useNaverMap.tsx` (맵 에러), `flood.ts` (API 에러)
+> 소스: `ApiErrorOverlay.tsx`, `useApiErrorOverlay.ts`, `App.tsx`
 
-FloodMap 컴포넌트 내부에서 발생하는 비동기 에러(API 호출 실패, 맵 로딩 실패 등)는
-`throw`하지 않고 **상태값(`error`)으로 관리**해서 자체 에러 UI를 렌더링한다.
-ErrorBoundary를 거치지 않으므로 L2 위젯 폴백이 아닌 FloodMap 자체 에러 화면이 뜬다.
+서버 API 에러(NetworkError, ApiError)는 FloodMap/Stats 개별이 아니라
+**`ApiErrorOverlay` 하나로 통합 처리**한다. (Hyeondoonge 리뷰 C안 반영)
 
-**에러 소스 2가지:**
+`useApiErrorOverlay` 훅이 React Query의 에러 상태를 구독하고,
+서버 API 에러가 감지되면 `app__content` 위에 오버레이 1개를 띄운다.
 
-`dataError` — API 호출 실패 (소스: `flood.ts`)
-- `NetworkError`: 서버 다운, 오프라인 등 fetch 자체 실패
-- `ApiError`: HTTP 응답은 왔으나 status가 에러 (4xx, 5xx)
-- `Error`: 응답 파싱 실패
+**에러 감지 로직 (`useApiErrorOverlay`):**
+```typescript
+const { error } = useQuery(floodQueryOptions(deferredPeriod))
+const apiError = error && isServerApiError(error) ? error : null
+```
+
+**오버레이 UI (`ApiErrorOverlay`):**
+- 아이콘: `isNetwork ? '📡' : '⚠️'`
+- 제목: 네트워크 오류 / 서버 오류
+- 메시지: `getUserFriendlyMessage(apiError, process.env.NODE_ENV === 'development')`
+- 재시도 버튼: `canRetry && onRetry` 일 때만 표시
+
+**재시도 클릭 시 동작:**
+`onRetry` → App.tsx의 `handleGlobalRetry()` → `queryClient.invalidateQueries({ queryKey: ['floodData'] })` → FloodMap + StatisticsPanel 양쪽 재요청
+
+**에러 → 정상 전환 감지:**
+`useApiErrorOverlay`가 에러 → 정상 전환을 감지하면 `onErrorCleared` 콜백 호출 → `retryCount` 증가 → Stats ErrorBoundary의 `resetKeys` 변경으로 자동 리셋
+
+---
+
+### L3-B 네이버 맵 에러 — FloodMap 내부에서 처리
+
+> 소스: `FloodMap.tsx`, `useNaverMap.tsx`
+
+네이버 맵 초기화 실패는 서버 API와 무관한 에러이므로 FloodMap 내부에서 자체 처리한다.
 
 `mapError` — 네이버 맵 초기화 실패 (소스: `useNaverMap.tsx`)
 - API 키 누락: 환경변수(`NAVER_MAPS_CLIENT_ID`)가 없을 때
@@ -206,45 +233,19 @@ ErrorBoundary를 거치지 않으므로 L2 위젯 폴백이 아닌 FloodMap 자�
 
 > 위 4가지 모두 `setError(new Error(...))` → `mapError` 상태로 관리되며, throw하지 않는다.
 
-**에러 병합 로직:**
-```typescript
-const { error: mapError } = useNaverMap(...)     // Error | null (맵 초기화 실패)
-const { error: dataError } = useQuery(...)       // Error | null (API 호출 실패)
-
-const error = mapError || dataError              // 둘 중 하나라도 있으면 에러 UI
-```
-
-**아이콘 결정:**
-```typescript
-const isNetwork = dataError ? isNetworkError(dataError) : false
-// isNetwork ? '📡' : '⚠️'
-```
-- `📡`: dataError가 `NetworkError`인 경우만
-- `⚠️`: 그 외 모든 경우 (ApiError, mapError 등)
-
-**재시도 버튼 표시 조건:**
-```typescript
-const canRetry = dataError ? isRetryable(dataError) : false
-// canRetry && onRetry 일 때만 "다시 시도" 버튼 표시
-```
-"다시 서버에 요청하면 성공할 가능성이 있는가?"로 판단한다.
-- **표시**: `NetworkError` (와이파이 복구 가능), `ApiError` 5xx (서버 복구 가능), `ApiError` 429 (시간 지나면 해제)
-- **숨김**: `ApiError` 4xx (서버가 요청을 거부 — 재요청해도 동일 결과), `mapError` (데이터 요청과 무관한 에러)
-
-**재시도 버튼 클릭 시 동작:**
-`onRetry` → App.tsx의 `handleRetry()` → `queryClient.invalidateQueries()` → React Query가 데이터 재요청
-
 **에러 메시지 결정:**
 ```typescript
-const errorMessage = isDev
-  ? getUserFriendlyMessage(error, true)           // DEV: error.message 원본
-  : (dataError
-    ? getUserFriendlyMessage(dataError, false)     // PROD + 데이터 에러: 타입별 안전 메시지
-    : '지도를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')  // PROD + 맵 에러: 고정 메시지
+const errorMessage = process.env.NODE_ENV === 'development'
+  ? mapError.message
+  : '지도를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.'
 ```
 
+- 아이콘: ⚠️ (고정)
+- 재시도 버튼: **없음** (맵 에러는 재시도로 해결 불가)
+- Stats 패널: 정상 동작
+
 > **L2 vs L3 차이점:** L2는 렌더 중 `throw`로 에러를 던져서 ErrorBoundary가 잡는다.
-> L3는 `throw`하지 않고 컴포넌트 내부 state로 에러를 관리해서 자체 UI를 보여준다.
+> L3-A는 오버레이로, L3-B는 컴포넌트 내부 state로 에러를 관리해서 자체 UI를 보여준다.
 
 ---
 
@@ -253,12 +254,12 @@ const errorMessage = isDev
 | 계층 | 에러 종류 | 발생 위치 | 아이콘 | 복구 수단 | Fallback UI | 격리 |
 |:---:|:---|:---|:---:|:---:|:---|:---|
 | **L1** | 앱 렌더링 에러 | `App.tsx` throw | 🚨 | 새로고침 | `RootErrorFallback` (풀스크린) | 앱 전체 차단 |
-| **L2** | FloodMap 렌더 에러 | `FloodMap.tsx` throw | ⚠️ (NetworkError면 📡) | 재시도 | `ErrorFallback` (위젯 영역) | Stats 정상 |
+| **L2** | FloodMap 렌더 에러 | `FloodMap.tsx` throw | ⚠️ | 재시도 | `ErrorFallback` (위젯 영역) | Stats 정상 |
 | **L2** | Stats 렌더 에러 | `StatisticsPanel.tsx` throw | 없음 | 재시도 | `StatisticsPanelFallback` (사이드바) | FloodMap 정상 |
-| **L3** | 네트워크 에러 | `flood.ts` fetch 실패 | 📡 | **재시도** | FloodMap 내부 에러 UI | Stats 정상 |
-| **L3** | API 5xx 에러 | `flood.ts` 서버 에러 | ⚠️ | **재시도** | FloodMap 내부 에러 UI | Stats 정상 |
-| **L3** | API 4xx 에러 | `flood.ts` 클라이언트 에러 | ⚠️ | **없음** | FloodMap 내부 에러 UI | Stats 정상 |
-| **L3** | 맵 초기화 에러 | `useNaverMap.tsx` | ⚠️ | **없음** | FloodMap 내부 에러 UI | Stats 정상 |
+| **L3-A** | 네트워크 에러 | `flood.ts` fetch 실패 | 📡 | **재시도** | `ApiErrorOverlay` (오버레이) | 양쪽 동시 처리 |
+| **L3-A** | API 5xx 에러 | `flood.ts` 서버 에러 | ⚠️ | **재시도** | `ApiErrorOverlay` (오버레이) | 양쪽 동시 처리 |
+| **L3-A** | API 4xx 에러 | `flood.ts` 클라이언트 에러 | ⚠️ | **없음** | `ApiErrorOverlay` (오버레이) | 양쪽 동시 처리 |
+| **L3-B** | 맵 초기화 에러 | `useNaverMap.tsx` | ⚠️ | **없음** | FloodMap 내부 에러 UI | Stats 정상 |
 
 ---
 
@@ -266,21 +267,23 @@ const errorMessage = isDev
 
 | 파일 | 역할 |
 |:---|:---|
-| `main.tsx` | L1 루트 ErrorBoundary 배치, RootErrorFallback 연결 |
-| `App.tsx` | L2 위젯 ErrorBoundary 2개 배치, `isRetryable` 기반 retry 전략 |
+| `page.tsx` | Next.js 진입점, `ssr: false` dynamic import (TODO: SSR-001) |
+| `App.tsx` | L2 위젯 ErrorBoundary 2개 배치, ApiErrorOverlay 연결, `isRetryable` 기반 retry 전략 |
 | `ErrorBoundary.tsx` | ErrorBoundary 클래스, ErrorFallback, RootErrorFallback 컴포넌트 |
+| `ApiErrorOverlay.tsx` | L3-A 서버 API 에러 오버레이 (NetworkError, ApiError 통합 표시) |
+| `useApiErrorOverlay.ts` | 서버 API 에러 감지 훅, 에러→정상 전환 감지 |
 | `errors.ts` | `ApiError`, `NetworkError` 클래스, `isRetryable`, `getUserFriendlyMessage` |
-| `FloodMap.tsx` | L3 내부 에러 처리 (아이콘/재시도/메시지 결정), L2용 `throw` |
+| `FloodMap.tsx` | L3-B 맵 에러 내부 처리, L2용 `throw` |
 | `StatisticsPanel.tsx` | L2용 `throw` |
 | `useNaverMap.tsx` | 네이버 맵 초기화 에러를 `Error` 객체로 관리 |
-| `flood.ts` | API 호출, `NetworkError`/`ApiError` throw |
+| `flood.ts` | API 호출, `NetworkError`/`ApiError` throw, SSR 빈 데이터 반환 |
 
 ---
 
 ## 6. DEV 에러 시뮬레이션
 
 > 모든 DEV 쿼리 파라미터는 `__dev_` 접두사를 사용합니다.
-> `import.meta.env.DEV` 조건 안에 있어 프로덕션 빌드에서 tree-shake 됩니다.
+> `process.env.NODE_ENV === 'development'` 조건 안에 있어 프로덕션 빌드에서 tree-shake 됩니다.
 
 | 쿼리 파라미터 | 계층 | 에러 클래스 | 발생 위치 | 아이콘 | 복구 수단 | 비고 |
 |:---|:---:|:---|:---|:---:|:---:|:---|
@@ -341,14 +344,22 @@ const errorMessage = isDev
 | `stats-fallback-message` | "데이터를 불러올 수 없습니다" |
 | `stats-fallback-retry-btn` | "다시 시도" 버튼 |
 
-### L3 FloodMap 내부 에러
+### L3-A ApiErrorOverlay (서버 API 에러)
+
+| testid | 설명 |
+|:---|:---|
+| `api-error-overlay` | 오버레이 컨테이너 |
+| `api-error-overlay-icon` | 📡 (네트워크) 또는 ⚠️ (서버) |
+| `api-error-overlay-message` | 에러 메시지 |
+| `api-error-overlay-retry-btn` | "다시 시도" 버튼 (retryable 에러만 표시) |
+
+### L3-B FloodMap 내부 에러 (맵 초기화)
 
 | testid | 설명 |
 |:---|:---|
 | `floodmap-error-container` | FloodMap 내부 에러 컨테이너 |
-| `floodmap-error-icon` | 📡 (네트워크) 또는 ⚠️ (그 외) |
+| `floodmap-error-icon` | ⚠️ |
 | `floodmap-error-message` | 에러 메시지 |
-| `floodmap-error-retry-btn` | "다시 시도" 버튼 (retryable 에러만 표시) |
 
 ---
 
