@@ -141,3 +141,15 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vercel
+
+# Playwright
+/test-results/
+/playwright-report/
+
+# Claude Code
+.claude/agents/
+
+# MCP
+.mcp.json
+.playwright-mcp/
+seed.spec.ts

@@ -16,7 +16,7 @@ interface UseNaverMapReturn {
   mapRef: React.RefObject<HTMLDivElement | null>
   map: naver.maps.Map | null
   isLoaded: boolean
-  error: string | null
+  error: Error | null
 }
 
 const NAVER_MAP_SCRIPT_ID = 'naver-map-script'
@@ -31,7 +31,7 @@ export function useNaverMap(options: UseNaverMapOptions = {}): UseNaverMapReturn
   const mapInstanceRef = useRef<naver.maps.Map | null>(null)
 
   const [isLoaded, setIsLoaded] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Error | null>(null)
 
   const cleanupMap = useEffectEvent(() => {
     const mapInstance = mapInstanceRef.current
@@ -50,7 +50,7 @@ export function useNaverMap(options: UseNaverMapOptions = {}): UseNaverMapReturn
   })
 
   const authFailureHandler = useEffectEvent(() => {
-    setError('네이버 지도 API 인증에 실패했습니다. API 키/도메인을 확인하세요.')
+    setError(new Error('네이버 지도 API 인증에 실패했습니다. API 키/도메인을 확인하세요.'))
   })
 
   const initializeMap = useEffectEvent(() => {
@@ -79,21 +79,30 @@ export function useNaverMap(options: UseNaverMapOptions = {}): UseNaverMapReturn
       mapInstanceRef.current = newMap
       setIsLoaded(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : '지도 초기화에 실패했습니다.')
+      setError(err instanceof Error ? err : new Error('지도 초기화에 실패했습니다.'))
     }
   })
 
   const handleScriptError = useEffectEvent(() => {
-    setError('네이버 지도 스크립트 로딩에 실패했습니다.')
+    setError(new Error('네이버 지도 스크립트 로딩에 실패했습니다.'))
   })
 
   // 스크립트 로딩 및 지도 초기화
   useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.has('__dev_mapError')) {
+        setError(new Error('DEV_MAP_ERROR'))
+        setIsLoaded(false)
+        return
+      }
+    }
+
     setError(null)
 
     const clientId = env.NAVER_MAPS_CLIENT_ID
     if (!clientId) {
-      setError('네이버 지도 API 키가 설정되지 않았습니다.')
+      setError(new Error('네이버 지도 API 키가 설정되지 않았습니다.'))
       return
     }
 

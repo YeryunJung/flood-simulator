@@ -11,7 +11,7 @@ import './FloodMap.css'
 interface FloodMapProps {
   className?: string
   enableClustering?: boolean
-  showControls?: boolean // 내부 컨트롤 표시 여부
+  showControls?: boolean
 }
 
 const SEOUL_CENTER = { lat: 37.5512, lng: 126.9882 } // 서울 남산 중심
@@ -22,9 +22,9 @@ export function FloodMap({
                            className = '',
                            enableClustering = true,
                            showControls = false,
-                         }: FloodMapProps) {
+}: FloodMapProps) {
   const { period, setPeriod } = usePeriodStore()
-  const deferredPeriod = useDeferredValue(period)
+  const deferredPeriod = useDeferredValue(period) // 기간 입력 변경 시 요청/깜빡임 완화
   const [clusteringEnabled, setClusteringEnabled] = useState(enableClustering)
   const legend = useMemo(() => getFloodLegend(), [])
 
@@ -32,27 +32,42 @@ export function FloodMap({
     center: SEOUL_CENTER,
     zoom: 13,
   })
-  const { data: floodData, isLoading: dataLoading, error: dataError } = useQuery({
+  const { data: floodData, isLoading: dataLoading } = useQuery({
     ...floodQueryOptions(deferredPeriod),
     placeholderData: keepPreviousData
   })
+
+  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search)
+    if (params.has('__dev_floodMapRenderError')) {
+      throw new Error('DEV_FLOODMAP_RENDER_ERROR')
+    }
+  }
+  const polygons = floodData?.polygons ?? []
   const { currentZoom, isClustered, clusterCount } = useFloodClusters({
     map,
-    polygons: floodData?.polygons ?? [],
+    polygons,
     clusterZoomThreshold: clusteringEnabled ? 11 : 0,
   })
 
-  const error = mapError || dataError?.message
-  if (error) {
+  // 네이버 지도 에러만 내부에서 처리
+  if (mapError) {
+    const errorMessage = process.env.NODE_ENV === 'development'
+      ? mapError.message
+      : '지도를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.'
+
     return (
-        <div className={`flood-map-container flood-map-error ${className}`}>
-          <p>{error}</p>
+        <div className={`flood-map-container flood-map-error ${className}`} data-testid="floodmap-error-container">
+          <div className="flood-map-error__content">
+            <span className="flood-map-error__icon" data-testid="floodmap-error-icon">⚠️</span>
+            <p data-testid="floodmap-error-message">{errorMessage}</p>
+          </div>
         </div>
     )
   }
 
   return (
-      <div className={`flood-map-container ${className}`}>
+      <div className={`flood-map-container ${className}`} data-testid="floodmap-container">
         {!mapLoaded && (
             <div className="flood-map-loading">
               <span>지도 로딩 중...</span>
@@ -114,7 +129,7 @@ export function FloodMap({
             </div>
         )}
 
-        {floodData && floodData.polygons.length > 0 && mapLoaded && !dataLoading && (
+        {floodData && polygons.length > 0 && mapLoaded && !dataLoading && (
             <div className="flood-map-info">
               <span>{floodData.metadata.title}</span>
               <span className="flood-map-info-count">
@@ -123,7 +138,7 @@ export function FloodMap({
             </div>
         )}
 
-        {floodData && floodData.polygons.length === 0 && mapLoaded && !dataLoading && (
+        {floodData && polygons.length === 0 && mapLoaded && !dataLoading && (
             <div className="flood-map-empty">
               <span>{period.year}년 {period.month}월에는 침수 데이터가 없습니다</span>
             </div>
